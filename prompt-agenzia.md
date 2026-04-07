@@ -528,3 +528,58 @@ Le email classificate vengono spostate automaticamente via IMAP in:
 ---
 
 *Ultimo aggiornamento: 2026-04-06*
+
+---
+
+## SESSIONE 2026-04-07 — 4GO-9: fix vari, nearby search Telegram, Nano Banana, aggiornamento automatico Gamma
+
+### Fix impostazioni admin
+- Saldo crediti Gamma: campo dinamico aggiornato da `gamma-poll` dopo ogni generazione (`gammaCreditsRemaining`, `gammaCreditsUpdatedAt` in SiteSettings)
+- Sezione Anthropic: rimosso budget manuale, consumo mensile dinamico con soglie fisse (€8 warning, €13 critical)
+- Sezione Gamma: rimosso budget manuale, notifiche Telegram su crediti reali (<1500 warning, <500 critical)
+- Saldo Gamma editabile manualmente in impostazioni come fallback
+
+### Nano Banana (admin/nanobanana)
+- Nuova pagina `/admin/nanobanana` solo per Inga
+- Generazione immagini AI con Gemini (stesso engine newsletter)
+- Galleria creazioni con download e eliminazione
+- Logo 4GO watermark automatico su ogni immagine (blend:screen, base64 embedded nel codice)
+- Immagini salvate in Blob sotto `4go/nanobanana/`
+
+### Telegram nearby search (posizione GPS)
+- Bot intercetta keyword: ristorante, cena, pranzo, bar, aperitivo, cocktail, cosa vedere, museo, attrazione, discoteca, nightlife, shopping, negozi, souvenir
+- Risponde con pulsante "Condividi posizione" → cliente manda GPS → Google Places Nearby Search (raggio 600m) → 3 risultati con rating, stato aperto/chiuso, link Maps
+- Funziona solo per sessioni ACTIVE (cliente con prenotazione)
+- Regola sistema prompt: bot non risponde a meteo/info su destinazioni fuori itinerario
+- Keyword aggiornate in /help e nei messaggi di benvenuto/interim
+- Variabile: `NEXT_PUBLIC_GOOGLE_MAPS_KEY` (Places API abilitata richiesta)
+
+### Sync docs operatori (4GODocs)
+- Repo pubblico `maxschiliro70-4go/4GODocs` con 4 file .md
+- GitHub Action `sync-docs.yml` su `4-GO` sincronizza automaticamente ad ogni push su `docs/*.md`
+- Token `DOCS_SYNC_TOKEN` come secret GitHub su `4-GO`
+- Progetti Claude.ai Massimo/Alessia/Inga collegati al repo via connettore GitHub
+
+### Progress bar Gamma PRV
+- Polling aumentato a 100 iterazioni (300s)
+- Barra di avanzamento con step e percentuale durante generazione
+- maxDuration 120s sulla route gamma-brochure
+
+### Aggiornamento automatico Gamma al cambio hotel
+- Flusso: cliente sceglie hotel → notifica operatore **originale** (chi ha creato il PKG, non sempre Massimo) via Telegram con bottone inline
+- `PreventivoPackage` ora salva `preventivoId` e `createdBy` (massimo/alessia/inga)
+- Bottone "🎨 Aggiorna brochure Gamma" → rigenera PRV con `hotelOverride` iniettato nel prompt Haiku
+- Se PKG aveva già Gamma generato → rigenera automaticamente anche quello
+- Migration: `preventivoId TEXT`, `createdBy TEXT` su `PreventivoPackage`
+
+### Multi-selezione extra PRV
+- Checkbox su ogni voce extra positiva in PRV CONFIRMED
+- "Seleziona tutti" / "Deseleziona tutti"
+- Selezione 2+ voci → pannello "Genera link unico" con totale aggregato
+- Singolo link Stripe/PayPal per tutte le voci selezionate
+
+### Fix vari
+- Confirm su tutti i cestini (calendario aggiunto)
+- Gamma PRV: rimosso campo `name` non supportato da API v1.0
+- model Haiku corretto: `claude-haiku-4-5-20251001`
+- Limiti testo Gamma PRV: 40k chars input Haiku, maxDuration 120s
