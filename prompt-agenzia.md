@@ -777,3 +777,23 @@ ALTER TABLE "Preventivo" ADD COLUMN IF NOT EXISTS "packageCode" TEXT;
 - `/preventivo-confermato`: SSR invece di client-side fetch (score Speed Insights 22→89 desktop)
 
 *Ultimo aggiornamento: 2026-04-08*
+
+---
+
+## SESSIONE 2026-04-08 sera — fix minori
+
+### Brevo contacts — fix conteggio
+- `brevo-contacts` filtrava tutti i contatti restituiti dall'API senza verificare `listIds.includes(7)`
+- Brevo può restituire contatti con `listIds:[]` (rimossi dalla lista ma non eliminati)
+- Fix: `.filter(c => c.listIds.includes(7))` prima di concatenare → conteggio allineato a Brevo
+
+### Ripristina attrazioni — fix loop infinito
+- Bottone "📍 Ripristina attrazioni" skippava sempre gli stessi 10 pacchetti già aggiornati
+- Fix: filtro `type:'attraction'` già presenti nel geoData + limit aumentato a 20
+
+### Google Maps link ItineraryMap
+- Link "Apri in Google Maps" usava `stops` state (vuoto al render) → URL vuoto
+- Fix: `geocodedStops` state esposto dall'useEffect e usato nel link
+- Filtro city-only rimosso: ora include tutte le attrazioni con dedup per coordinate identiche
+
+*Ultimo aggiornamento: 2026-04-08*
