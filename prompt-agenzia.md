@@ -583,3 +583,75 @@ Le email classificate vengono spostate automaticamente via IMAP in:
 - Gamma PRV: rimosso campo `name` non supportato da API v1.0
 - model Haiku corretto: `claude-haiku-4-5-20251001`
 - Limiti testo Gamma PRV: 40k chars input Haiku, maxDuration 120s
+
+---
+
+## SESSIONE 2026-04-07/08 — 4GO-10: fix critici, nuove feature, SEO, prenotazioni manuali
+
+### Fix getServerSession → getToken
+Tutte le route API che usavano `getServerSession()` senza `authOptions` crashavano in produzione con `NO_SECRET`. Sostituite con `getToken()` da `next-auth/jwt` in: packages, activity, email-reply, blog, blog/[id], social-post, send-newsletter, preventivi/package, generate-gamma-auto.
+
+### Fix additionalEmails ManualBooking
+Campo `additionalEmails` (formato `Nome Cognome <email>, ...`) su prenotazioni manuali. Problema: la lista prenotazioni veniva da `/api/admin/bookings` (non `/api/admin/manual-bookings`) — raw query aggiunta al route corretto. Lezione: tracciare sempre il flusso UI→fetch→route prima di modificare.
+
+### Email partecipanti aggiuntivi
+- Email inviata automaticamente a tutti i partecipanti aggiuntivi al cambio stato
+- Bottone "📧 Invia a partecipanti" con checkbox per selezione individuale
+- Bottone "✓ Segna già inviata" per marcare senza inviare (prenotazioni storiche)
+- Campo `emailedParticipants` (JSON array) traccia chi ha già ricevuto → checkbox disabilitato con "✓ già inviata"
+- Flag `_onlyAdditional` e `_selectedEmails` nel PATCH per invio selettivo
+
+### QR email → vercel.app durante COMING_SOON
+`buildQrSignature` usa `4go-gamma.vercel.app` se `COMING_SOON=true`, `fourgo.it` dopo il lancio. Middleware: `/bot` bypass coming soon per QR già inviati ai clienti.
+
+### Fix FK violation Package.createdById
+`createdById` FK verso `User` ma operatori sono in `AdminUser` → impostato sempre `null`.
+
+### Multi-hotel PKG
+- Notifica all'operatore **originale** (createdBy: massimo/alessia/inga) invece di sempre Massimo
+- Scelta pagamento acconto/totale dal cliente su `/scegli-pacchetto` → `paymentChoice` salvato in DB
+- Admin genera **un solo link** (acconto o totale) in base alla scelta del cliente
+- `PkgPaymentBlock` come componente separato (fix crash lista)
+
+### Gamma PRV → ManualBooking
+Alla conversione PRV→4GO: `gammaUrl` e `gammaText` copiati nel ManualBooking. Bot usa `gammaUrl` per mandare brochure e `gammaText` come contesto itinerario per rispondere a domande specifiche.
+
+### Gamma auto-generazione
+- `generate-gamma-auto`: rimosso campo `name` (Gamma API 400)
+- `resultRef` sincronizzato con state per evitare stale closure in `savePackage`
+- Progress bar visibile indipendentemente da `showVisual`
+- Gamma si avvia automaticamente dopo salvataggio bozza da import PDF
+
+### Import pacchetti (parse-document)
+- `availability`: sempre stringa vuota (no date importate)
+- `priceFrom`: prezzo totale, non per persona
+- `passportRequired`: false se CI sufficiente (Albania, EU)
+- `ecoData` completo: co2KgPerPerson, ecoRating, localEconomy, flightHours
+- `visual` completo: primaryColor, secondaryColor, fontHeading, mood, coverTagline
+- No email tour operator nel testo estratto
+
+### Palette e font per destinazione (generate-gamma-auto)
+Stile visivo specifico per: Africa/Safari, Giappone, Vietnam/Asia, Maldive/Caraibi, Italia/Grecia, Giordania/Marocco, Norvegia/Islanda, Albania, Spagna, USA/Florida, Portogallo, America Latina, Francia, Austria/Vienna, Praga/Boemia, Budapest/Balkani, Polonia, Olanda, Germania, Svizzera, UK, Scandinavia, Russia, Turchia, Egitto, India, Cina, Corea, Australia, Canada, Messico.
+
+### SEO pacchetti
+- Schema JSON-LD: `@type: ['Product', 'TouristTrip']` + itinerary + ecoData CO2 + touristType
+- Blog autogen linka al pacchetto correlato con slug reale
+- Pagina pacchetto mostra sezione "📖 Leggi anche" con blog correlati per destinazione
+
+### Pacchetti admin
+- Filtro città nel dropdown lista pacchetti
+- Badge Gamma cliccabile per pacchetti con gammaUrl
+- Bottone "Crea PRV" da pacchetto (icona FileText)
+- Link "Visualizza" punta a vercel.app (fourgo.it in coming soon)
+- Tipo viaggio: aggiunti "città" e "avventura" in AI generator, modifica pacchetto, filtro pubblico
+
+### Migration ecoData.localEconomy
+Backfill automatico di `localEconomy` su tutti i pacchetti esistenti in base a countryCode/destination. Albania/EU ~60-65%, USA/Canada ~30%, Asia ~50%, Dubai ~25%.
+
+### Fix vari
+- `NEXTAUTH_URL` → `fourgo.it` su Vercel ✅
+- URL fallback in code da vercel.app → fourgo.it (eccetto logo Gamma — da fare post-lancio)
+- Email firme: logo da vercel.app → fourgo.it
+- Statistiche: `ActivityLog` table creation in migration + `getToken` fix
+- Città tripType: match `citta↔città` in PacchettiClient
+- PKG lista multi-hotel: crash risolto con `PkgPaymentBlock` separato
