@@ -735,3 +735,45 @@ ALTER TABLE "Preventivo" ADD COLUMN IF NOT EXISTS "packageCode" TEXT;
 - **Regeocode sovrascrive le attrazioni** — usare solo per pacchetti con geoData assente/sbagliato
 - **savedIdRef** invece di `savedId` in closures async per evitare stale state
 - **PATCH vs PUT** — verificare sempre quale metodo HTTP espone la route
+
+---
+
+## SESSIONE 2026-04-08 pomeriggio — fix mappe, Social AI, email, blog
+
+### Google Maps link
+- `ItineraryMap`: link "Apri in Google Maps" usa `lat,lng` reali da `geocodedStops` (non nomi città)
+- Deduplicazione coordinate identiche prima di costruire il link
+- Il link mostra il percorso completo con tutte le attrazioni del viaggio
+
+### Import PDF → geoData con attrazioni
+- Il geoData viene salvato correttamente con `type:'city'` e `type:'attraction'` durante l'import
+- Skip localStorage se `geoData` DB disponibile → niente cache stantia dopo import
+- Cache key include `_${geoData.length}` → invalidazione automatica se DB cambia
+- Bottone "📍 Ripristina attrazioni" in Sistema: salta pacchetti con `type:'attraction'` già presenti
+
+### Email prenotazione — QR Telegram
+- Font grandi, colori compatibili tema chiaro
+- Testo "👆 copia questo codice, poi apri Telegram" sotto il codice prenotazione
+- Testo non in corsivo
+- Bottone Apri assistente: 15px, padding 12px 22px, rosso 4GO
+- Nota finale non in corsivo: "L'assistente virtuale ti accompagnerà durante il viaggio..."
+
+### Social AI — nuove feature
+- Documenti raggruppati per prenotazione con accordion (chiusi di default, clicca per aprire)
+- Sezione "🤖 Utenti che hanno avviato il bot" — solo SUPERADMIN, in fondo alla tab Telegram
+  - Mostra nome, codice prenotazione, stato sessione, data
+  - Sessioni con `state !== 'WAITING_CODE'` (chi ha effettivamente avviato il bot)
+- Pacchetti associabili a documenti: tutti i pacchetti (non solo quelli con prenotazioni)
+
+### Blog — foto e dedup
+- Foto blog: se destinazione non in `destinationImages.ts` → query Pexels con `"${location} city"`
+- `destinationImages.ts` arricchito: Berlin, Vienna, Paris, Brussels, Tallinn, Tirana, Cipro, Helsinki, Copenhagen, Sofia, Florida, Chicago
+- Bottone "🧹 Pulisci blog" elimina duplicati per destinazione (mantiene più recente)
+- Foto copiate automaticamente dal pacchetto corrispondente
+
+### Performance
+- Carousel homepage: hero da indice random, carousel2 da indice 2
+- Hero ridotto da 80/85vh a 65/72vh per vedere il contenuto subito sotto
+- `/preventivo-confermato`: SSR invece di client-side fetch (score Speed Insights 22→89 desktop)
+
+*Ultimo aggiornamento: 2026-04-08*
