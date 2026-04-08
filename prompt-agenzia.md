@@ -655,3 +655,83 @@ Backfill automatico di `localEconomy` su tutti i pacchetti esistenti in base a c
 - Statistiche: `ActivityLog` table creation in migration + `getToken` fix
 - Città tripType: match `citta↔città` in PacchettiClient
 - PKG lista multi-hotel: crash risolto con `PkgPaymentBlock` separato
+
+---
+
+## SESSIONE 2026-04-08 — 4GO-11: operazioni background, mappe, blog, Social AI
+
+### Pannello operazioni globale (background)
+- `OperationsContext` + `OperationsPanel` fisso in basso a destra
+- Gamma/import PDF/mappe continuano anche navigando tra le pagine admin
+- Auto-save bozza PRIMA di avviare Gamma (fix stale closure con `savedIdRef`)
+- `PATCH /api/admin/packages/[id]` per aggiornamenti parziali (gammaUrl, status, ecc.)
+- Al completamento Gamma: link "📦 Apri in lista pacchetti →"
+
+### Streaming SSE parse-document
+- `parse-document` risponde con SSE stream: 15% → 45% → 85% → 100%
+- Progress bar in tempo reale durante import PDF pacchetti
+- `readSSEStream()` helper nel client
+
+### Tipi viaggio allineati
+- Costante `TRIP_TYPES` in `src/lib/tripTypes.ts` (15 tipi: individuale, gruppo, partner, fly&drive, nozze, crociera, città, cultura, enogastronomia, divertimento, lusso, natura, benessere, adrenalina, studio)
+- Sincronizzata tra FilterBar pubblica e tutti i dropdown admin
+
+### Import pacchetti — nuove feature
+- Notifica Telegram a tutti gli operatori al salvataggio di un nuovo pacchetto
+- `createdByName` (String?) su Package — tag autore nella lista pacchetti
+- `packageCode` nel PRV creato da pacchetto (badge amber 📦)
+- `gammaText` (Text?) su Package — estratto dalla brochure Gamma per il bot Telegram
+- Bot Telegram: fallback `Package.gammaText` se `ManualBooking` non ha gammaText
+- Geocoding con `countryCode` come filtro Google Maps (evita match errati es. Cipro→Tanzania)
+
+### ItineraryMap — fix definitivi
+- `ItineraryMap` include sia `type:'city'` che `type:'attraction'` come marker numerati
+- Skip localStorage se `geoData` dal DB è disponibile (no più cache stantia)
+- Cache key include lunghezza geoData → si invalida automaticamente se DB cambia
+- `geocodedStops` state esposto per link Google Maps
+- Google Maps link usa `lat,lng` coordinate reali (non nomi città) + dedup
+- Chip filtro città visibile anche con una sola città (city break)
+
+### Restore geoData
+- Endpoint `/api/admin/restore-geodata`: estrae attrazioni dall'itinerario via Haiku + geocodifica
+- Bottone "📍 Ripristina attrazioni" in `/admin/sistema`
+- Salta automaticamente pacchetti con attrazioni già presenti (filter `type:'attraction'`)
+- Limit 20 pacchetti per run
+
+### Blog — dedup e foto
+- `packageSlug` + `articleType` su modello `Post` come chiave univoca di deduplica
+- `blog-autogen` controlla combo `packageSlug|articleType` prima di generare
+- Query immagini: `"${location} city"` invece di `"travel landscape"` (risultati più precisi)
+- Bottone "🧹 Pulisci blog" in `/admin/sistema` (dedup + fix foto da pacchetto corrispondente)
+- `destinationImages.ts` aggiornato con tutte le città europee principali
+
+### Social AI — documenti
+- Documenti raggruppati per prenotazione con accordion (chiusi di default)
+- Sezione "🤖 Utenti che hanno avviato il bot" visibile solo SUPERADMIN
+- Dropdown pacchetti mostra tutti i pacchetti (rimosso filtro `booked=1`)
+
+### Sezione Sistema — Manutenzione Contenuti
+- "🖼️ Avvia verifica" — controlla immagini rotte
+- "🗺️ Ricalcola mappe" — rigenera geoData da mapCities
+- "📍 Ripristina attrazioni" — rigenera attrazioni da itinerario via AI
+- "🧹 Pulisci blog" — dedup post e fix foto
+
+### Performance
+- `/preventivo-confermato` convertita da client-side a SSR
+- `/login` logo con `priority` e dimensioni ottimizzate
+- Hero carousel parte da indice random, carousel2 da indice 2
+
+### Migration (4go2026) — nuovi campi
+```sql
+ALTER TABLE "Package" ADD COLUMN IF NOT EXISTS "createdByName" TEXT;
+ALTER TABLE "Package" ADD COLUMN IF NOT EXISTS "gammaText" TEXT;
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "packageSlug" TEXT;
+ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "articleType" TEXT;
+ALTER TABLE "Preventivo" ADD COLUMN IF NOT EXISTS "packageCode" TEXT;
+```
+
+### Lezioni apprese
+- **Non toccare ItineraryMap/geoData senza leggere le sessioni precedenti** — il geoData include type:'city', type:'attraction', type:'optional' e tutti devono essere mostrati
+- **Regeocode sovrascrive le attrazioni** — usare solo per pacchetti con geoData assente/sbagliato
+- **savedIdRef** invece di `savedId` in closures async per evitare stale state
+- **PATCH vs PUT** — verificare sempre quale metodo HTTP espone la route
