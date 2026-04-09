@@ -173,3 +173,34 @@ Le mappe sui pacchetti mostrano:
 Admin → Utenti → clicca sul nome di un operatore:
 - Tutte le azioni svolte nell'admin
 - Sezioni mai utilizzate evidenziate in arancione
+
+---
+
+## Aggiornamento sessione 13 — 2026-04-09
+
+### Mappe pacchetti
+- La mappa interattiva usa solo punti `type:'city'` per il percorso (no attrazioni)
+- Le attrazioni vengono rigenerate automaticamente al termine di ogni import PDF
+- Bottone **🔄 Forza rigenera attrazioni** in Sistema sovrascrive anche pacchetti già aggiornati
+- **Ricalcola mappe** ora forza sempre l'aggiornamento (force:true di default)
+- Alias città italianizzate: Gibilterra→Gibraltar, Londra→London, ecc. (senza vincolo paese)
+- Bottone **Rigenera mappe statiche** in Sistema (equivalente a chiamare `/api/admin/generate-static-maps` con `force:true`)
+
+### Preventivi
+- Selezione multipla preventivi: checkbox su card → "Genera Gamma (N)" → max 10 in parallelo background
+- Conferma preventivo cliente: email senza link pagamento — operatore li genera dall'admin
+- Pagine cliente (preventivo-confermato, scegli-pacchetto, ecc.) accessibili anche con COMING_SOON=true
+
+### Gamma PRV
+- Polling aumentato a 300s, maxDuration route 300s
+- Testo PDF adattivo: ≤15k tutto, 15k-40k → 17k, >40k → 28k
+- Progress visibile nel pannello operazioni durante generazione
+
+### Pexels
+- Query immagini senza "landscape", pagina max 3, idx max 10
+
+### Bug fix
+- extractJSON gestisce bad escaped characters nel JSON itinerario
+- allSections activity log include tutte le pagine admin
+- mapCities riconosce formato "CITTÀ X GIORNI" nei PDF Massimo
+- Regeocode limit 50 (era 10), esclude ARCHIVED
