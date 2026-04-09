@@ -797,3 +797,53 @@ ALTER TABLE "Preventivo" ADD COLUMN IF NOT EXISTS "packageCode" TEXT;
 - Filtro city-only rimosso: ora include tutte le attrazioni con dedup per coordinate identiche
 
 *Ultimo aggiornamento: 2026-04-08*
+
+---
+
+## SESSIONE 2026-04-09 — Proposte Viaggio (TravelProposal)
+
+### Nuovo modello: TravelProposal
+- Modello Prisma separato da PreventivoPackage e Multi Hotel PKG
+- Route admin: `/api/admin/travel-proposal` (GET lista, POST actions, DELETE)
+- Route pubblica: `/api/proposta-viaggio?code=XXX` (no auth)
+- Route conferma: `/api/proposta-scegli` (GET, salva selezioni)
+- Admin: `/admin/proposte-viaggio`
+- Cliente: `/proposta-viaggio?code=XXX` (whitelisted nel middleware)
+
+### Flusso operativo
+1. Admin carica PDF programma viaggio (multi-tappa, hotel + treni)
+2. Claude Sonnet legge il PDF visivamente (base64, `anthropic-beta: pdfs-2024-09-25`) ed estrae:
+   - `legs[]`: destinazioni con hotel, prezzi, ratings
+   - `transports[]`: treni con orari, durate e prezzi per classe (economy/business/executive)
+3. Admin inserisce dati cliente (email non obbligatoria), salva
+4. Genera brochure Gamma (tutti gli hotel per tappa + tutti gli orari treni)
+5. Invia email al cliente con link scelta e link Gamma
+6. Cliente sceglie: ordine cronologico (treno→hotel→treno→hotel→treno)
+   - Ogni cella prezzo è cliccabile → seleziona orario + classe insieme
+   - Se partenza entro 30gg: solo pagamento totale (no acconto)
+   - Totale = hotel selezionati + trasporti selezionati + eventuale assicurazione
+7. Operatore: genera link pagamento (Stripe/PayPal acconto+saldo) o "Pagato in agenzia"
+8. Extra items post-conferma: aggiungi voci nome/importo, genera link pagamento separato per ciascuna
+
+### Struttura dati transports
+```json
+{
+  "label": "Milano Centrale → Napoli Centrale",
+  "date": "2026-10-03",
+  "options": [{
+    "dep": "06:40", "arr": "11:48", "duration": "5h 8m",
+    "prices": {
+      "economy": { "economy": 66.90, "business": 83.90, "executive": 109.90 },
+      "flex": { "economy": 94.90, "business": 119.90, "executive": 159.90 }
+    }
+  }]
+}
+```
+
+### Note tecniche
+- PDF parsing: `FileReader.readAsDataURL` lato client → base64 → Claude API con `type: 'document'`
+- Prezzi nel PDF sono in tabelle visive (non testo) → necessario PDF vision, non pdftotext
+- `selectedTransports`: struttura `{tIdx: {opt: number, cls: string}}` (orario + classe)
+- Brevo API key: deve iniziare con `xkeysib-` (REST), NON `xsmtpsib-` (SMTP)
+
+*Ultimo aggiornamento: 2026-04-09*
