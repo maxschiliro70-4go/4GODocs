@@ -847,3 +847,43 @@ ALTER TABLE "Preventivo" ADD COLUMN IF NOT EXISTS "packageCode" TEXT;
 - Brevo API key: deve iniziare con `xkeysib-` (REST), NON `xsmtpsib-` (SMTP)
 
 *Ultimo aggiornamento: 2026-04-09*
+
+---
+
+## SESSIONE 2026-04-10 — Fix TravelProposal + Riorganizzazione menu
+
+### extractPrice — gestione formati prezzi treni
+Claude può restituire prezzi in 3 formati diversi:
+- **Piatto**: `{economy: 66.9, business: 83.9}`
+- **Underscore**: `{economy_economy: 66.9, economy_business: 83.9}`
+- **Annidato**: `{economy: {economy: 66.9, business: 83.9}}`
+
+La funzione `extractPrice(prices, cls)` in `proposta-viaggio/page.tsx` gestisce tutti e tre.
+
+### Fix critici
+- TDZ: `extractPrice` dichiarata PRIMA di `transportTotal` che la usa
+- Deselect hotel/treno: `delete n[key]` invece di sentinelle `-1`/`undefined`
+- Trasporto finale duplicato: rimosso loop ridondante nell'ordine cronologico
+- Middleware: `/api/proposta-scegli`, `/grazie`, `/selezione-viaggio` aggiunti alla whitelist
+
+### Menu admin riorganizzato
+- **Pacchetti**: AI Generator → spostato in Selezioni Viaggio; Blog e Blog Auto-Gen aggiunti qui
+- **Selezioni Viaggio**: AI Generator Preventivi, Multi Hotel PKG, Proposte Viaggio, Multi Preventivo (placeholder), Prenotazioni
+- **Sistema**: Statistiche Vendita, PayPal Monitor, Search Console, Visite Pagine
+- **Infrastruttura**: Sistema, Utenti Admin, Impostazioni
+
+### Multi Preventivo (placeholder)
+- Path admin: `/admin/multi-preventivo`
+- Path cliente futuro: `/selezione-viaggio` (già in whitelist middleware)
+- In attesa dei PDF di esempio per definire struttura `parsedData`
+- Flusso: N PDF → N card destinazione → cliente segna "mi interessa" → operatore sviluppa le papabili → iterazione fino a scelta definitiva → conversione in 4GO
+
+### Extra items nel totale saldo
+`totalAmount` nel `PaymentBlock` e nel `generate-payment-link` include gli extra items positivi.
+Il link saldo (70%) copre hotel + trasporti + extra. Ogni extra ha anche un link pagamento separato.
+PaymentBlock e extra items visibili anche con status `PAID`.
+
+### Firme email
+File in `public/firme-email/`. Logo embedded base64 (nessun alert Thunderbird). Social con tabella nested `align/valign center` (compatibile Thunderbird/Outlook). Firme: massimiliano (titolare, mobile), alessia (consulente, mobile +39 334 731 8073), inga (consulente), agenzia (team).
+
+*Ultimo aggiornamento: 2026-04-10*
