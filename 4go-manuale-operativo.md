@@ -204,3 +204,49 @@ Admin → Utenti → clicca sul nome di un operatore:
 - allSections activity log include tutte le pagine admin
 - mapCities riconosce formato "CITTÀ X GIORNI" nei PDF Massimo
 - Regeocode limit 50 (era 10), esclude ARCHIVED
+
+---
+
+## Aggiornamento sessione 17 — 2026-04-15
+
+### Multi Preventivo — miglioramenti
+- **Inbox IMAP**: processing sequenziale (no rate limit Browserless 429), priorità link `click.email/?qs=` per PDF Alpitour, maxDuration 300s
+- **Parsing PDF**: ora usa Claude Sonnet (era Haiku) → dati più accurati. Totale = E/C CLIENTE, non tasse voli
+- **Counter Gamma**: mostra `0/N → 1/N → ...` in tempo reale durante generazione multipla (polling ogni 8s)
+- **Badge createdBy**: ogni MP mostra il badge dell'operatore che lo ha creato
+- **Email aggiuntive**: campo nel form creazione + pulsante ✏️ su MP esistenti — invia la proposta a più destinatari in CC
+- **Notifica Telegram**: quando il cliente approva le selezioni su `/selezione-viaggio` arriva notifica a tutti gli operatori con le proposte di interesse
+- **Edit inline**: pulsante ✏️ su ogni MP per modificare nome/email/telefono/email aggiuntive
+
+### Pagamenti Liberi — nuova sezione admin
+- **Admin → Pagamenti Liberi**: genera link Stripe + PayPal ad-hoc senza preventivo associato
+- Campi: descrizione, importo, nome cliente, email cliente, note interne
+- Email automatica al cliente con entrambi i link
+- Stato PENDING → PAID automatico via webhook Stripe o capture PayPal
+- Pulsante **Rigenera link** (nuovi Stripe+PayPal + reinvio email) e **Reset PENDING** se stato è errato
+
+### PayPal capture — fix globale
+- Tutti i flussi PayPal ora catturano il pagamento prima del redirect:
+  - Pacchetti pubblici → `/prenotazione/success`
+  - Preventivi → `/api/paypal/capture?type=preventivo&code=XXX`
+  - PKG multi-hotel → `/api/paypal/capture?type=pkg&code=XXX`
+  - Pagamenti liberi → `/api/paypal/capture-free?code=XXX`
+
+### GDPR — Registro Trattamenti art. 30
+- **Admin → GDPR — Registro**: registro modificabile con 6 trattamenti precaricati
+- Pulsante **Genera con AI** (Haiku): descrivi il trattamento → tutti i campi compilati automaticamente
+- Pulsante **Scarica .docx**: genera documento Word aggiornato con data e firma Massimiliano
+- Salvataggio nel DB (SiteSettings.gdprRegistro)
+
+### Prenotazioni
+- Download documenti: icona ⬇ su ogni file caricato → download diretto via `/api/admin/tg-documents/download?id=XXX`
+
+### Mailing list
+- Fix: `massimo@fourgo.it` ora processato correttamente (era bloccato dal guard `fourgo.it`)
+- `agenziaviaggi-fourtravel.it` aggiunto ai domini esclusi per evitare auto-iscrizione Massimo
+- Brevo bulk import via `/contacts/import` (una sola chiamata, niente loop)
+
+### Gamma PKG multi-hotel
+- Orari volo reali da `flightOut/flightReturn`, tipo transfer corretto (collettivo/privato)
+- Prezzi hotel in H1 (massima evidenza), asterisco `*` con nota inclusi
+- Slide date dedicata con tabella partenza/rientro/notti/range prezzi
