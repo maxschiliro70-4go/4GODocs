@@ -105,3 +105,50 @@
 - Rigenerare Gamma per TP-2026-SX7VM dopo aggiornamento dati
 - Verificare Lighthouse /contatti dopo deploy lazyOnload (attesa 24-48h dati Speed Insights reali)
 - Considerare riscrittura BgSlideshow: prima immagine come `<img fetchPriority="high">` per LCP reale
+
+---
+
+## Sessione 18 — 2026-04-24 (post-lancio, giorno 2)
+
+### Stato sito
+- 🟢 LIVE su fourgo.it dal 2026-04-23
+- 193 pagine rilevate da Google, CrUX vuoto (serve 28gg traffico reale)
+- Commit finale sessione: `0849a02`
+
+### Newsletter — fix multipli
+- Logo: base64 inline → `https://fourgo.it/logo-4go.png` (base64 bloccato da Gmail/iOS Mail)
+- Social icons: SVG → blocchi testo colorati (f, in, TT, WA, Th, Pi) compatibili tutti i client email
+- Invio destinatari selezionati: usa `sendTest` con `emailTo` (Campaign API non supporta `emailTo` su `sendNow`)
+- Bounce/disiscritti: separati — `emailBlacklisted` (bounce, eliminabili) vs `emailUnsubscribed` (da tenere)
+- Entrambi nascosti dalla lista contatti UI, esclusi da "Tutti attivi"
+- Badge `⚠️ N esclusi` visibile nell'header Destinatari
+- Bottone elimina compare solo se `bounced > 0`
+- `brevo-stats` GET ora restituisce `bounced`, `unsubscribed`, `blacklisted` (totale) separati
+
+### Hero carousel — fix LCP
+- **Problema**: shuffle `Math.random()` in `useEffect` causava secondo render completo → TBT spike
+- **Soluzione**: shuffle server-side in `page.tsx`, passa 5 immagini già ordinate a HeroSection
+- HeroSection: `heroImages` ora è costante (no useState, no shuffle client)
+- Preload `/_next/image?url=img[0]` ora allineato all'immagine LCP reale
+- `revalidate: 10s` → nuove 5 immagini ogni ~10s (utenti diversi vedono set diversi)
+- Immagini già su Vercel Blob da sempre — nessuna migrazione necessaria
+- **Risultati PSI prima/dopo**: Desktop TBT 735ms→264ms, Chi-siamo 13.6s→1.7s LCP
+
+### Blog dedup
+- Normalizzatore: 3 parole → 2 parole (cattura più cluster)
+- Soglia: 3 articoli → 2 articoli
+- Eseguito `dry=false` → 13 articoli messi in DRAFT, rimossi dalla sitemap
+- Cluster rimossi: Salonicco (2), New York (3), Singapore-Langkawi (1), Kuala Lumpur (1), Gili Trawangan (1), Maldive (1), Tanzania (1), Nuova Zelanda (1), Lang Tengah (1), San Antonio Ibiza (1)
+
+### SEO / Search Console
+- `/coming-soon` → redirect 301 a `/` (pagina esisteva fisicamente, indicizzata da Google)
+- 3 pagine con redirect in Search Console: http://fourgo.it/ (link esterno http), sofia-bulgaria-weekend (transitorio lancio), sicilia-maggio-giugno-2026 (pre-lancio) — tutti storici, nessuna azione codice
+- **Da fare**: cambiare link http:// in https:// su GBP e Pagine Gialle
+
+### Pending
+- Aruba email forwarding (in attesa)
+- Test email conferma prenotazione 1€ con operatori
+- TOTP reset QR admin
+- Bing Places verificato (7-12gg) → aggiungere URL a `sameAs` in `layout.tsx`
+- Cambiare link http:// → https:// su GBP e Pagine Gialle
+- Aggiornare cron-job.org URL da vercel.app → fourgo.it (password-expiry, blog-check, appointment-reminders)
