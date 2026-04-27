@@ -152,3 +152,59 @@
 - Bing Places verificato (7-12gg) → aggiungere URL a `sameAs` in `layout.tsx`
 - Cambiare link http:// → https:// su GBP e Pagine Gialle
 - Aggiornare cron-job.org URL da vercel.app → fourgo.it (password-expiry, blog-check, appointment-reminders)
+
+---
+
+## Sessione 19 — 2026-04-27
+
+### Landing locali — contenuto unico AI
+- Problema: 30 pagine `/agenzia-viaggi/[citta]` con 2 frasi template → thin content → Google le escludeva dall'indice
+- Soluzione: endpoint `/api/admin/generate-city-content?secret=4go2026` → Haiku genera 3 blocchi per ogni città: paragrafo unico, trasporti specifici, FAQ locale
+- Salvataggio in `SiteSettings.cityContent` (DB Neon, non filesystem — Vercel è read-only)
+- Pagina legge dal DB con `getCityContent(slug)`, mostra i blocchi solo se presenti
+- `robots: index: true` automatico quando content presente, `noindex` se manca
+- `export const revalidate = 3600` + `revalidatePath` dopo generazione → pagine aggiornate subito
+- 31 città generate senza errori, noindex rimosso automaticamente
+- Schema migration: `ALTER TABLE "SiteSettings" ADD COLUMN IF NOT EXISTS "cityContent" JSONB`
+
+### Performance /pacchetti
+- FilterBar (261 righe) → `dynamic(() => import('./FilterBar'), { ssr: false })` → esce dal bundle principale
+- Obiettivo: ridurre TBT da 233ms
+
+### SEO pacchetti
+- `aggregateRating` con fallback recensioni globali se nessuna specifica del pacchetto
+- `hasMerchantReturnPolicy` + `shippingDetails` aggiunti a `offers` — fix Search Console warnings
+- Rich Results Test: 12 elementi validi, zero errori
+
+### Email AI — fix multipli
+- AI classifier (Haiku) per email sistema/directory → MANAGED automatico senza lista domini
+- Check Brevo lista 7 → nuovo cliente → risposta warm + `send-welcome` automatico
+- Allegati/screenshot cliente → `sendPhoto` su Telegram a tutti gli operatori
+- Prompt: mai "purtroppo non ho informazioni", sempre proattivo
+- staff.aruba.it, italiaonline e pattern schede directory → MANAGED
+- Email AI default su Potenziali invece di Tutti
+
+### Telegram bot — fix
+- Direzioni dall'hotel: usa nome hotel dai documenti → link Google Maps diretto
+- Negozi/brand → link Maps search invece di "non ho info"
+- Ristoranti senza posizione → chiedi posizione GPS
+- Trasporti/JR Pass → risponde con conoscenza propria senza rimandare alla reception
+- MAI dire "purtroppo non ho informazioni"
+
+### Fix vari
+- Facebook ID: 61575551933426 → 61579686167154 in 6 file
+- Email operatori: massimo/alessia/inga@agenziaviaggi-fourtravel.it → @fourgo.it
+- /coming-soon → redirect 301 a homepage
+- Blog-dedup: normalizzatore 2 parole, soglia 2 → 13 DRAFT
+- Hero shuffle server-side, revalidate 10s
+
+### Backlink acquisiti
+- MilanoToday ✅ (form contribuisci)
+- L'Agenzia di Viaggi Magazine ✅ (redazione@lagenziadiviaggimag.it)
+- GBP link http→https ✅
+
+### Pending
+- FIAVET + Confcommercio Senago (telefonate Massimiliano)
+- Test email conferma prenotazione 1€
+- TOTP reset QR admin
+- Bing Places verificato → sameAs layout.tsx
