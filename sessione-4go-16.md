@@ -31,6 +31,7 @@
 | `15b5138` | feat: bot Telegram — getDestTimezone completa per 50+ destinazioni, fallback UTC |
 
 > Nota: alcuni fix correlati andavano accorpati in commit unici — da migliorare.
+| `f83e814` | feat: bot Telegram — lingua locale mostra-al-locale vs capire-lui, guida help aggiornata |
 
 ---
 
