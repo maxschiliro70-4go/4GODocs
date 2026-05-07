@@ -31,6 +31,28 @@
 | `15b5138` | feat: bot Telegram — getDestTimezone completa per 50+ destinazioni, fallback UTC |
 
 > Nota: alcuni fix correlati andavano accorpati in commit unici — da migliorare.
+| `e1c78dc` | fix: recensioni — hover espande testo completo, badge sempre visibile se non approvate |
+| `30afdbc` | feat: tipo viaggio multi-selezione con checkbox nel form admin, filtro pubblico aggiornato per CSV |
+| `86b126b` | fix: PacchettiClient — matchesInterest wrapper mancante dopo refactor tripTypes |
+| `948940b` | fix: TripTypeMultiSelect — React.useState → useState |
+| `92fd742` | revert: rimuove easy drive da tipi viaggio |
+| `f8839b4` | feat: aggiunge mare a tipi viaggio admin e filtri pubblici |
+| `204363a` | fix: detectRegion — Africa prima di Asia, word boundary su iran/cuba/ecc |
+| `123a070` | fix: detectRegion usa coordinate geoData reali invece di regex |
+| `307140a` | fix: detectRegion — Oceania prima di Europa, fix NZ |
+| `0af1a77` | revert: rimuovi geoData da API pubblica — causava 500 |
+| `c1d94bf` | fix: detectRegion — geoData dalla API pubblica, voto maggioranza città |
+| `f83e814` | feat: bot Telegram — lingua locale mostra-al-locale vs capire-lui, guida help |
+| `15b5138` | feat: bot Telegram — getDestTimezone completa per 50+ destinazioni |
+| `7c95d3c` | fix: bot Telegram — Maps generalizzato per tutte le destinazioni |
+| `cb0db47` | feat: bot Telegram — link Maps/KakaoMap inline per ogni tappa |
+| `39605e1` | fix: bot Telegram — logistica rientro solo se rientro è domani |
+| `5379264` | feat: bot Telegram — no logistica non richiesta, bottoni Maps per giornata libera |
+| `8aecbd9` | fix: bot Telegram — timezone Corea/NZ/Vietnam, data domani esplicita |
+| `6773755` | feat: Admin Scraper SERP — analisi posizionamento Google, azioni AI, invio email |
+| `9256087` | fix: Scraper SERP spostato in Sistema, visibile solo a superadmin |
+| `7d2ccbb` | fix: isSuperAdmin via fetch session — fix crash sistema |
+| `275cdc7` | fix: Scraper SERP in Infrastruttura (stesso livello Sistema) |
 | `f83e814` | feat: bot Telegram — lingua locale mostra-al-locale vs capire-lui, guida help aggiornata |
 
 ---
@@ -79,6 +101,14 @@
   - `4GO-2026-THLP9` → returnDate 10/05, ancora in viaggio
 
 ---
+
+## Novità sessione odierna (07/05/2026)
+
+- **Recensioni**: testo espandibile al hover, badge sempre visibile
+- **Tipo viaggio**: multi-selezione con checkbox, aggiunto "mare", rimosso "easy drive"
+- **detectRegion**: usa geoData reali (coordinate) con voto maggioranza, fallback regex corretto
+- **Bot Telegram**: timezone 50+ destinazioni, lingua locale mostra-al-locale/capire-lui, Maps inline, logistica rientro contestuale, bottoni giornata libera
+- **Scraper SERP**: nuova pagina in Infrastruttura (solo superadmin) — analizza 19 query su Google, genera azioni AI actionable, invia email report operatori
 
 ## Pendenti immediati
 
