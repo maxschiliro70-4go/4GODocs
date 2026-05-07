@@ -110,6 +110,58 @@
 - **Bot Telegram**: timezone 50+ destinazioni, lingua locale mostra-al-locale/capire-lui, Maps inline, logistica rientro contestuale, bottoni giornata libera
 - **Scraper SERP**: nuova pagina in Infrastruttura (solo superadmin) — analizza 19 query su Google, genera azioni AI actionable, invia email report operatori
 
+## Aggiornamenti finali sessione (08/05/2026)
+
+### Commit aggiuntivi
+| Commit | Descrizione |
+|--------|-------------|
+| `c57c6e6` | fix: apostrofo non escaped in FAQ Milano |
+| `204363a` | fix: detectRegion — Africa prima di Asia, word boundary |
+| `123a070` | fix: detectRegion usa coordinate geoData reali |
+| `0af1a77` | revert: rimuovi geoData da API pubblica — causava 500 |
+| `4e05d87` | feat: seoTitle chirurgici 8 pacchetti, stemmi SVG landing city |
+| `22f45ca` | fix: stemma landing city — params.citta invece di citta undefined |
+| `66174bc` | fix: stemmi URL Wikimedia Special:FilePath |
+| `ab70752` | feat: aggiunge landing /agenzia-viaggi/senago |
+| `9f0665c` | fix: rimuove Milano da STEMMI |
+| `d35386e` | feat: stemma Milano SVG inline |
+| `12d7194` | feat: landing Milano — box citazione MilanoToday |
+| `bd115bd` | feat: landing Milano — sezione Come raggiungerci con costi reali |
+| `92dbd4a` | fix: aggiunge Tanzania a seo-update |
+| `25e3c87` | feat: landing Milano — foto Duomo come sfondo hero |
+| `e7b4b6a` | feat: landing Milano — FAQPage schema, areaServed, pacchetti, FAQ accordion |
+| `99cfd84` | feat: landing Milano — classi energetiche trasporti, bici, Viaggiamo Responsabile |
+| `6204478` | feat: landing Milano — moto/scooter con classi energetiche |
+| `35a1b2c` | feat: landing Milano — auto 3 classi energetiche, nota Area B/C |
+| `525efd6` | feat: suggest-seo-title da Google+AI, car sharing Milano |
+| `d9565a4` | fix: aggiunge Senago a generate-city-content |
+| `80865b5` | fix: formato testuale city content — immune a escaping JSON |
+| `c607850` | fix: 0 errori generazione 32 città |
+| `81c03f9` | feat: landing Senago — hero Via Volta, dal 1998, mappa, turismo sostenibile |
+| `0bd051a` | fix: Senago hero — overlay blu, objectPosition ottimizzato |
+
+### Stato generate-city-content
+- **32 città generate con 0 errori** ✅ — formato testuale invece di JSON
+- Milano esclusa dalla generazione automatica (contenuto custom manuale)
+- Senago aggiunta alla lista
+
+### Landing city — stato finale
+- **Senago**: hero foto Via Volta, badge "dal 1998", mappa Google, orari, turismo sostenibile
+- **Milano**: foto Duomo, MilanoToday, trasporti con classi energetiche (bici A+++, treno A+, metro A, moto B/C, car sharing A+, auto D/B/A+, uber A), FAQ, pacchetti, Viaggiamo Responsabile
+- **Tutte le 31 città**: stemma SVG Wikimedia, contenuto AI unico per città
+- **Senago/Milano**: noindex rimosso (cityContent presente)
+
+### Suggest SEO Title
+- Endpoint `/api/admin/suggest-seo-title` — nel form pacchetti, tab SEO
+- Cerca su Google le keyword reali per la destinazione
+- Propone 3 varianti di seoTitle con conteggio caratteri
+
+### Scraper SERP
+- 19 query analizzate, tutte assenti (sito giovane)
+- In Infrastruttura admin, solo superadmin
+- Azioni AI generate senza markdown
+- Cron settimanale da configurare
+
 ## Pendenti immediati
 
 - [ ] Verificare domani 07/05 alle 7: notifica Telegram per 51HTE (Biagio + gruppo Giappone)
