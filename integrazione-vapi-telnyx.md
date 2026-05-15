@@ -212,7 +212,29 @@ Vapi non dichiara di essere AI se non esplicitamente interrogato. Script:
 
 ---
 
-## 9. Prossimi Passi
+## 9. Traduzione Bidirezionale al Tavolo
+
+**Scenario:** cliente seduto al ristorante, cameriere parla solo la lingua locale.
+
+### Fase 1 — Opzione 2: Vocale Telegram (da implementare)
+1. Cliente scrive "traduci questo" e allega un **vocale** registrato dal cameriere
+2. Violetta riceve il file audio via Telegram
+3. Trascrive con Whisper/Deepgram nella lingua locale
+4. Traduce in italiano e risponde al cliente
+
+**Stack:** Telegram voice message → `/api/telegram/webhook` legge `voice.file_id` → download file → Deepgram STT → Claude traduce → risposta testo
+
+### Fase 2 — Opzione 3: Vapi Live Interpreter (dopo test Telnyx)
+1. Cliente chiede "fai da interprete con il cameriere"
+2. Vapi apre chiamata — cliente mette in vivavoce
+3. Violetta interpreta in tempo reale italiano ↔ lingua locale
+4. Sostituisce completamente l'Opzione 2
+
+**Nota:** Opzione 3 sostituirà Opzione 2 quando il flusso Vapi+Telnyx sarà testato e stabile.
+
+---
+
+## 10. Prossimi Passi
 
 1. ⏳ **Attendere approvazione KYC Telnyx** (2-5 giorni lavorativi)
 2. **Acquistare numero** +39 02 89608767 su Telnyx
