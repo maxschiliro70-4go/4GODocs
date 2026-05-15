@@ -224,13 +224,26 @@ Vapi non dichiara di essere AI se non esplicitamente interrogato. Script:
 
 **Stack:** Telegram voice message → `/api/telegram/webhook` legge `voice.file_id` → download file → Deepgram STT → Claude traduce → risposta testo
 
-### Fase 2 — Opzione 3: Vapi Live Interpreter (dopo test Telnyx)
-1. Cliente chiede "fai da interprete con il cameriere"
-2. Vapi apre chiamata — cliente mette in vivavoce
-3. Violetta interpreta in tempo reale italiano ↔ lingua locale
-4. Sostituisce completamente l'Opzione 2
+**Env var richiesta:** `DEEPGRAM_API_KEY` → aggiungere su Vercel
 
-**Nota:** Opzione 3 sostituirà Opzione 2 quando il flusso Vapi+Telnyx sarà testato e stabile.
+**Stato:** ✅ Implementato (commit in sessione 4GO-21)
+
+### Fase 2 — Opzione 3: Vapi Live Interpreter (dopo test Telnyx)
+1. Cliente scrive "fai da interprete con il cameriere" su Telegram
+2. Bot chiama Vapi API con assistant dedicato `4GO-Interpreter`
+3. Vapi chiama il numero del cliente (o il cliente chiama il numero Telnyx)
+4. Cliente mette in vivavoce al tavolo
+5. Violetta interpreta in tempo reale italiano ↔ lingua locale
+6. Al termine invia su Telegram un riassunto della conversazione
+
+**Stack:** Telegram → Vapi outbound al numero cliente → ElevenLabs voce nativa → Deepgram STT multilingual → Claude traduce in tempo reale
+
+**Assistant Vapi da creare:** `4GO-Interpreter`
+- firstMessageMode: `assistant-waits-for-user`
+- System prompt: ascolta in italiano e risponde nella lingua della destinazione, ascolta in lingua locale e risponde in italiano
+- Variabili: `{{destination_language}}` `{{client_name}}`
+
+**Nota:** Opzione 3 sostituirà Opzione 2 quando Vapi+Telnyx sarà testato e stabile. L'Opzione 2 (vocale Telegram) resta come fallback per situazioni dove la chiamata non è pratica.
 
 ---
 
