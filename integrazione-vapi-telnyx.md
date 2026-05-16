@@ -307,7 +307,34 @@ If asked if AI: say you are an agency secretary. Never mention AI. Maximum 4 min
 
 ---
 
-## 11. Prossimi Passi
+## 11. Gestione CountryCode nelle Prenotazioni
+
+Il `countryCode` è il campo che determina la configurazione Vapi per la chiamata (lingua, voce, opening message).
+
+**Fonti in ordine di priorità:**
+1. `ManualBooking.countryCode` — impostato manualmente da Massimo (sovrascrive tutto)
+2. `Package.countryCode` — derivato automaticamente durante l'import del pacchetto
+3. Auto-detect da `destination` tramite `DEST_COUNTRY_MAP` — usato nel form admin
+
+**Admin prenotazioni manuali:**
+- Campo destinazione → auto-detect country code (es. "Zanzibar" → `TZ`)
+- Selezione pacchetto → auto-compila destinazione → auto-detect country code
+- Dropdown multi-selezione con ricerca per destinazioni multiple (es. `PE,AW` per Perù+Aruba)
+- Badge 🌍 visibile nella lista, modificabile nel form
+- Vapi usa il **primo** codice per la lingua della chiamata
+
+**Prenotazioni automatiche (online):**
+- `countryCode` letto da `Package.countryCode` (già popolato durante import AI)
+- Se mancante → Massimo può aggiungere manualmente dalla lista prenotazioni
+
+**TODO — flusso acquisto bot Violetta:**
+- Il campo `destination` diventa **obbligatorio** nel form acquisto
+- Al completamento Stripe/PayPal → auto-populate `countryCode` da destinazione
+- Il bot Telegram avrà accesso al `countryCode` per configurare Vapi automaticamente
+
+---
+
+## 12. Prossimi Passi
 
 1. ⏳ **Attendere approvazione KYC Telnyx** (2-5 giorni lavorativi)
 2. **Acquistare numero** +39 02 89608767 su Telnyx
