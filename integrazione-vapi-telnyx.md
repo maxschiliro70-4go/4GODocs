@@ -247,6 +247,28 @@ Vapi non dichiara di essere AI se non esplicitamente interrogato. Script:
 
 **Nota:** Opzione 3 sostituirà Opzione 2 quando Vapi+Telnyx sarà testato e stabile. L'Opzione 2 (vocale Telegram) resta come fallback per situazioni dove la chiamata non è pratica.
 
+### Uso pratico — Cliente al ristorante
+
+**Scenario reale testato (16 maggio 2026):**
+Cliente seduto al tavolo → cameriere parla solo rumeno → cliente usa Violetta come interprete:
+
+1. Cliente scrive a Violetta: "digli che sono celiaco"
+2. Violetta risponde con la frase in rumeno + bottone 🔊 per pronuncia
+3. Cliente fa sentire il telefono al cameriere
+4. Cameriere risponde → cliente registra vocale → manda a Violetta
+5. Violetta trascrive (Deepgram STT multilingua) + traduce in italiano
+
+**Funziona già con Opzione 2** — nessun ulteriore sviluppo necessario.
+Con **Opzione 3** (Vapi live) il flusso sarà ancora più fluido: Violetta farà da interprete in tempo reale senza scambi di messaggi.
+
+### Vapi per chiamate outbound al ristorante
+Flusso separato e già testato in rumeno:
+- Bot riconosce intent "prenota ristorante"
+- Raccoglie: quante persone, data, ora, intolleranze
+- Chiama il ristorante con Vapi nella lingua locale
+- Variabili già convertite in lettere native via `vapi-utils.ts`
+- Conferma torna su Telegram al cliente
+
 ---
 
 ## 10. Prompt OutboundBooking — Versione Produzione
