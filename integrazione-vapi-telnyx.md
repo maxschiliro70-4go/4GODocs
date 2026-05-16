@@ -319,3 +319,70 @@ If asked if AI: say you are an agency secretary. Never mention AI. Maximum 4 min
 8. **Pannello admin** `/admin/bot-subscriptions` per Massimo
 9. **Pagina prodotto** Violetta + video HeyGen demo
 10. **SEO/AEO** keyword "chatbot viaggio AI", "assistente viaggio telegram"
+
+---
+
+## 12. Mapping Country → Vapi Config Ottimale
+
+Quando 4GO chiama l'API Vapi, passa la configurazione ottimale in base alla country della destinazione:
+
+```typescript
+const COUNTRY_VAPI_CONFIG: Record<string, {
+  language: string,        // Deepgram language code
+  destLanguage: string,    // Testo per system prompt
+  openingMessage: string,  // First message nella lingua locale
+  voiceId: string,         // ElevenLabs voice ID
+}> = {
+  // EUROPA
+  FR: { language: 'fr', destLanguage: 'French', openingMessage: 'Bonjour, je vous appelle de la part de l\'agence for go FourTravel de Milan.', voiceId: 'Xb7hH8MSUJpSbSDYk0k2' },
+  IT: { language: 'it', destLanguage: 'Italian', openingMessage: 'Buongiorno, sono la segretaria dell\'agenzia for go FourTravel di Milano.', voiceId: '[voiceId Violetta]' },
+  ES: { language: 'es', destLanguage: 'Spanish', openingMessage: 'Buenos días, llamo de parte de la agencia for go FourTravel de Milán.', voiceId: 'EXAVITQu4vr4xnSDxMaL' },
+  DE: { language: 'de', destLanguage: 'German', openingMessage: 'Guten Tag, ich rufe im Namen der Reiseagentur for go FourTravel aus Mailand an.', voiceId: 'cgSgspJ2msm6clMCkdW9' },
+  PT: { language: 'pt', destLanguage: 'Portuguese', openingMessage: 'Bom dia, ligo em nome da agência for go FourTravel de Milão.', voiceId: 'nPczCjzI2devNBz1zQrb' },
+  NL: { language: 'nl', destLanguage: 'Dutch', openingMessage: 'Goedemorgen, ik bel namens reisagentschap for go FourTravel uit Milaan.', voiceId: 'pFZP5JQG7iQjIQuC4Bku' },
+  GR: { language: 'el', destLanguage: 'Greek', openingMessage: 'Καλημέρα, τηλεφωνώ εκ μέρους του τουριστικού γραφείου for go FourTravel από το Μιλάνο.', voiceId: 'JBFqnCBsd6RMkjVDRZzb' },
+  RO: { language: 'ro', destLanguage: 'Romanian', openingMessage: 'Bună ziua, vă sun din partea agenției for go FourTravel din Milano.', voiceId: 'EXAVITQu4vr4xnSDxMaL' },
+  CZ: { language: 'cs', destLanguage: 'Czech', openingMessage: 'Dobrý den, volám jménem cestovní agentury for go FourTravel z Milána.', voiceId: 'cgSgspJ2msm6clMCkdW9' },
+
+  // ASIA
+  JP: { language: 'ja', destLanguage: 'Japanese', openingMessage: 'こんにちは、ミラノのfor go FourTravelという旅行代理店からお電話しています。', voiceId: 'Xb7hH8MSUJpSbSDYk0k2' },
+  CN: { language: 'zh-CN', destLanguage: 'Chinese', openingMessage: '您好，我是来自米兰for go FourTravel旅行社的助理。', voiceId: 'cgSgspJ2msm6clMCkdW9' },
+  KR: { language: 'ko', destLanguage: 'Korean', openingMessage: '안녕하세요, 밀라노 for go FourTravel 여행사에서 전화드립니다.', voiceId: 'sf8Bpb1IU97NI9BHSMRf' },
+
+  // MEDIO ORIENTE / AFRICA
+  MA: { language: 'ar', destLanguage: 'Arabic', openingMessage: 'مرحباً، أتصل بكم من وكالة سفر for go FourTravel في ميلانو.', voiceId: 'EXAVITQu4vr4xnSDxMaL' },
+  EG: { language: 'ar', destLanguage: 'Arabic', openingMessage: 'مرحباً، أتصل بكم من وكالة سفر for go FourTravel في ميلانو.', voiceId: 'EXAVITQu4vr4xnSDxMaL' },
+
+  // AMERICHE / OCEANIA (inglese)
+  US: { language: 'en', destLanguage: 'English', openingMessage: 'Hello, I\'m calling on behalf of for go FourTravel travel agency from Milan, Italy.', voiceId: 'Xb7hH8MSUJpSbSDYk0k2' },
+  AU: { language: 'en', destLanguage: 'English', openingMessage: 'Hello, I\'m calling on behalf of for go FourTravel travel agency from Milan, Italy.', voiceId: 'Xb7hH8MSUJpSbSDYk0k2' },
+  GB: { language: 'en', destLanguage: 'English', openingMessage: 'Hello, I\'m calling on behalf of for go FourTravel travel agency from Milan, Italy.', voiceId: 'Xb7hH8MSUJpSbSDYk0k2' },
+
+  // DEFAULT
+  DEFAULT: { language: 'en', destLanguage: 'English', openingMessage: 'Hello, I\'m calling on behalf of for go FourTravel travel agency from Milan, Italy.', voiceId: 'Xb7hH8MSUJpSbSDYk0k2' },
+}
+```
+
+**Uso nel webhook Telegram:**
+```typescript
+const country = getCountryFromDestination(destination) // es. 'FR' da 'Normandia'
+const vapiConfig = COUNTRY_VAPI_CONFIG[country] || COUNTRY_VAPI_CONFIG['DEFAULT']
+
+// Chiamata API Vapi
+const vapiCall = {
+  assistantOverrides: {
+    model: { provider: 'openai', model: 'gpt-4o-mini' },
+    transcriber: { provider: 'deepgram', model: 'nova-3', language: vapiConfig.language },
+    voice: { provider: '11labs', voiceId: vapiConfig.voiceId },
+    variableValues: {
+      destination_language: vapiConfig.destLanguage,
+      opening_message: vapiConfig.openingMessage,
+      client_name: session.participantName,
+      guests: parsedGuests,
+      date: parsedDate,
+      time: parsedTime,
+      special_requests: parsedSpecialRequests,
+    }
+  }
+}
+```
