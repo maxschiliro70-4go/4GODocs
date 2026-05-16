@@ -274,7 +274,9 @@ Flusso separato e già testato in rumeno:
 ## 10. Prompt OutboundBooking — Versione Produzione
 
 **First Message:** `{{opening_message}}`
-**firstMessageMode:** `assistant-speaks-first`
+**firstMessageMode:** `assistant-waits-for-user`
+
+> **Architettura prompt:** il System Prompt su Vapi è un **template fisso** con variabili `{{}}`. Le variabili vengono iniettate dinamicamente da 4GO via API ad ogni chiamata. Non si rigenera il prompt — si cambiano solo i valori delle variabili.
 
 **System Prompt:**
 ```
