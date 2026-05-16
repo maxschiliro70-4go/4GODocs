@@ -447,7 +447,54 @@ const messages = buildVapiMessages(lang, {
 
 ---
 
-## 13. Prossimi Passi
+## 13. TODO — Revisione Prompt Vapi Production
+
+Quando il flusso Telegram→Vapi sarà implementato, **tutti e 6 gli assistant Vapi** vanno aggiornati con il template generico usando `{{variabili}}` invece dei valori hardcoded.
+
+### Template production OutboundBooking
+```
+STEP 1: {{opening_message}}
+After STEP 1, NEVER introduce yourself again. Go directly to STEP 2.
+
+STEP 2: {{step2_message}}
+If NO → STEP 5. If YES → STEP 3.
+
+STEP 3: {{step3_message}}
+If YES → STEP 4 with note. If NO → {{step3_no}} then STEP 4 without note.
+
+STEP 4: {{step4_confirm}}
+On confirmation: {{step4_close}}
+
+STEP 5: {{step5_ask}}
+If alternative → STEP 4 updated. If none → {{step5_no}}
+
+If asked AI: {{ai_answer}}
+Maximum 4 minutes.
+```
+
+### Variabili generate da buildVapiMessages()
+Tutte le frasi vengono generate in `src/lib/vapi-utils.ts` nella lingua corretta:
+- `opening_message` — presentazione con nome (Violetta/Massimo) + cliente
+- `step2_message` — richiesta tavolo con guests/date/time in lettere native
+- `step3_message` — richiesta intolleranze
+- `step3_no` — risposta se ristorante non può gestire intolleranza
+- `step4_confirm` — conferma dettagli completa
+- `step4_close` — saluto finale
+- `step5_ask` — richiesta alternativa se non disponibile
+- `step5_no` — chiusura se nessuna alternativa
+- `ai_answer` — risposta se chiedono se è AI
+
+### Da fare per ogni assistant:
+- [ ] OutboundBooking — sostituire dati hardcoded con {{variabili}}
+- [ ] PreDepartureReminder — aggiornare con {{client_name}} {{destination}} {{departure_date}} ecc.
+- [ ] ReviewRequest — aggiornare con {{client_name}} {{destination}} {{return_date}}
+- [ ] Inbound — già generico, nessuna modifica
+- [ ] ServiceBooking — stesso approccio di OutboundBooking
+- [ ] TransferConfirm — aggiornare con {{pickup_location}} {{pickup_time}} ecc.
+
+---
+
+## 14. Prossimi Passi
 
 1. ⏳ **Attendere approvazione KYC Telnyx** (2-5 giorni lavorativi)
 2. **Acquistare numero** +39 02 89608767 su Telnyx
