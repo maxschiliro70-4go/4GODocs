@@ -11,10 +11,12 @@
 | Telefonia | **Telnyx** | info@fourgo.it | PAYG ~$0,0055/min outbound |
 | LLM | Claude Haiku 4.5 | Anthropic | $0,01/min |
 | Voce | ElevenLabs eleven_multilingual_v2 | — | $0,04/min |
-| Trascrizione | Deepgram Nova 3 Multilingual | — | $0,01/min |
+| Trascrizione | **Gladia** (multilingua avanzato) | — | ~$0,01/min |
 | **Totale per chiamata** | | | **~$0,11/min · ~$0,25-0,33 per prenotazione** |
 
 **Vapi Assistant ID:** `640e941e-93e7-46ab-a91b-1959d9020374`
+
+> **Nota trascrittore:** Deepgram Nova-3 supporta solo 10 lingue (no rumeno). Per lingue meno comuni usare **Gladia** come transcriber su Vapi — supporta 100+ lingue con rilevamento automatico. Cambiare in Vapi → Transcriber → Gladia.
 **Telnyx numero:** `+39 02 89608767` (KYC in approvazione, 2-5 giorni)
 **Auto-reload Vapi:** $10 quando scende sotto $2 (da abilitare su dashboard.vapi.ai → Billing)
 
@@ -247,7 +249,65 @@ Vapi non dichiara di essere AI se non esplicitamente interrogato. Script:
 
 ---
 
-## 10. Prossimi Passi
+## 10. Prompt OutboundBooking — Versione Produzione
+
+**First Message:** `{{opening_message}}`
+**firstMessageMode:** `assistant-speaks-first`
+
+**System Prompt:**
+```
+You are a professional secretary calling on behalf of 4GO FourTravel,
+an Italian travel agency based in Senago, near Milan, Italy.
+
+ABSOLUTE RULE: Speak ONLY in {{destination_language}} for the ENTIRE call. No exceptions.
+IMPORTANT: You are the CALLER. You called this restaurant. Never switch roles.
+
+LANGUAGE RULE:
+- Calling Italy: no mention of language barrier
+- Calling abroad: mention clients do not speak the local language fluently
+
+CONVERSATION RULES:
+- ONE sentence at a time, then WAIT for response
+- Maximum 1-2 sentences per turn
+
+RESERVATION DETAILS:
+- Client: {{client_name}} · Guests: {{guests}} · Date: {{date}} · Time: {{time}}
+- Special requests: {{special_requests}}
+
+STEP 1 — Introduce (WAIT): Present yourself as 4GO FourTravel secretary calling for {{client_name}}
+STEP 2 — Request table for {{guests}} on {{date}} at {{time}} (WAIT)
+STEP 3 — Special requests if any (WAIT)
+STEP 4 — Confirm all details and thank
+STEP 5 — If unavailable: ask for alternatives
+
+If asked if AI: say you are an agency secretary. Never mention AI. Maximum 4 minutes.
+```
+
+**Variabili passate dall'API 4GO:**
+```json
+{
+  "destination_language": "French",
+  "opening_message": "Bonjour, je vous appelle de la part de l'agence 4GO FourTravel de Milan.",
+  "client_name": "Antonio Ferrari",
+  "guests": "2",
+  "date": "16 maggio 2026",
+  "time": "20:00",
+  "special_requests": ""
+}
+```
+
+**Mapping destinazione → lingua → voce:**
+| Destinazione | destination_language | opening_message | voice_id |
+|---|---|---|---|
+| Normandia/Parigi | French | Bonjour, je vous appelle... | Alice Xb7hH8MSUJpSbSDYk0k2 |
+| Romania/Bucarest | Romanian | Bună ziua, vă sun din partea... | (voce rumena) |
+| Madrid/Barcellona | Spanish | Buenos días, llamo de parte... | Sarah EXAVITQu4vr4xnSDxMaL |
+| Tokyo/Kyoto | Japanese | こんにちは、4GO FourTravelの... | Alice Xb7hH8MSUJpSbSDYk0k2 |
+| Italia | Italian | Buongiorno, sono la segretaria... | Violetta |
+
+---
+
+## 11. Prossimi Passi
 
 1. ⏳ **Attendere approvazione KYC Telnyx** (2-5 giorni lavorativi)
 2. **Acquistare numero** +39 02 89608767 su Telnyx
