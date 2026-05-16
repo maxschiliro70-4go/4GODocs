@@ -358,7 +358,96 @@ Il `countryCode` è il campo che determina la configurazione Vapi per la chiamat
 
 ---
 
-## 12. Prossimi Passi
+## 12. Flusso Bot Telegram → Vapi (Prenotazione Ristorante)
+
+### Stati della conversazione
+Il webhook Telegram gestisce il flusso tramite `__booking_state:STATO` salvato nel context della sessione.
+
+```
+BOOKING_ASK_GUESTS    → quante persone?
+BOOKING_ASK_DATE      → per quando? (data)
+BOOKING_ASK_TIME      → a che ora?
+BOOKING_ASK_GLUTEN    → intolleranze alimentari?
+BOOKING_ASK_GLUTEN_DETAIL → quali intolleranze?
+BOOKING_ASK_CUISINE   → preferenze cucina?
+BOOKING_SEARCH        → cerca ristorante con Brave
+BOOKING_CONFIRM       → conferma ristorante trovato
+BOOKING_CALLING       → chiama Vapi (chiamata in corso)
+BOOKING_DONE          → conferma ricevuta da Vapi webhook
+```
+
+### Dialogo completo
+
+```
+Cliente: "prenota un ristorante"
+
+Violetta: "Per quante persone?" [→ BOOKING_ASK_GUESTS]
+
+Cliente: "2"
+
+Violetta: "Per quale giorno?" [→ BOOKING_ASK_DATE]
+
+Cliente: "stasera" / "domani" / "16 maggio"
+
+Violetta: "A che ora?" [→ BOOKING_ASK_TIME]
+
+Cliente: "20:00"
+
+Violetta: "Hai intolleranze o allergie alimentari?" [→ BOOKING_ASK_GLUTEN]
+
+Cliente: "sì" → Violetta: "Quali?" [→ BOOKING_ASK_GLUTEN_DETAIL]
+Cliente: "no" → vai a BOOKING_ASK_CUISINE
+
+Cliente: "glutine"
+
+Violetta: "Hai preferenze sul tipo di cucina?" [→ BOOKING_ASK_CUISINE]
+
+Cliente: "no" / "pesce" / "locale"
+
+Violetta: "Cerco un ristorante nelle vicinanze... 🔍" [→ BOOKING_SEARCH]
+         [Brave Search: ristoranti vicino hotel, filtro cucina]
+
+Violetta: "Ho trovato **Le Saint-Hilaire** in Rue du Vieux-Marché.
+          Vuoi che prenoti lì o preferisci un altro?" [→ BOOKING_CONFIRM]
+
+Cliente: "sì prenota"
+
+Violetta: "Chiamo ora! Ti avviso appena ho la conferma 📞" [→ BOOKING_CALLING]
+         [Vapi outbound call con tutte le variabili]
+
+[Vapi webhook → 4GO → Telegram]
+
+Violetta: "✅ Prenotato! Tavolo per 2 alle 20:00 da Le Saint-Hilaire.
+          Con nota di intolleranza al glutine. Buon appetito! 🍽️"
+```
+
+### Gestione interruzioni
+Se il cliente risponde fuori contesto durante il flusso:
+> "Rispondo alla tua domanda... [risposta] ...Torniamo alla prenotazione: [ripete domanda pendente]"
+
+### Implementazione
+- Stato salvato nel context come `{ role: 'system', content: '__booking_state:STATO' }`
+- Dati raccolti salvati come `{ role: 'system', content: '__booking_data:JSON' }`
+- Trigger: messaggi che contengono "prenota", "prenotare", "reservation", "book"
+- Piano richiesto: **Concierge (49,90€)** — altrimenti mostra upgrade message
+
+### Variabili passate a Vapi
+```typescript
+const messages = buildVapiMessages(lang, {
+  clientName: session.participantName,
+  voiceId: vapiConfig.voiceId,
+  guests: bookingData.guests,
+  travelDate: bookingData.date,
+  time: bookingData.time,
+  hasGlutenIntolerance: bookingData.gluten,
+  specialRequests: bookingData.cuisine,
+})
+// + numero telefono ristorante da Brave Search
+```
+
+---
+
+## 13. Prossimi Passi
 
 1. ⏳ **Attendere approvazione KYC Telnyx** (2-5 giorni lavorativi)
 2. **Acquistare numero** +39 02 89608767 su Telnyx
