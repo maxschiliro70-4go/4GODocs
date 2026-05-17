@@ -573,3 +573,19 @@ const vapiCall = {
   }
 }
 ```
+
+## 14. TODO — Demo-bot `/demo-bot`
+
+### noindex da rimuovere
+Il file `src/app/demo-bot/layout.tsx` ha `noindex,nofollow` — impedisce l'indicizzazione della pagina demo.
+
+**Quando rimuoverlo:** quando il prodotto Violetta è commercializzato e si vuole che `fourgo.it/demo-bot` appaia in SERP (es. per query "assistente viaggio AI italiano").
+
+**Come:** rimuovere il tag meta dalla head:
+```tsx
+// src/app/demo-bot/layout.tsx
+// Rimuovere questa riga:
+<meta name="robots" content="noindex,nofollow" />
+```
+
+Poi aggiungere metadata SEO completi (title, description, aggregateRating) con la stessa struttura delle altre landing.
