@@ -589,3 +589,23 @@ Il file `src/app/demo-bot/layout.tsx` ha `noindex,nofollow` — impedisce l'indi
 ```
 
 Poi aggiungere metadata SEO completi (title, description, aggregateRating) con la stessa struttura delle altre landing.
+
+## 15. TODO — Pagina `/violetta` noindex da rimuovere
+
+La pagina `fourgo.it/violetta` (piani Explorer/Traveller/Concierge) ha `robots: noindex,nofollow` nel file `src/app/(public)/violetta/metadata.ts`.
+
+**Quando rimuoverlo:** quando il flusso di acquisto Stripe/PayPal è attivo e il prodotto Violetta è vendibile.
+
+**Come:**
+```ts
+// src/app/(public)/violetta/metadata.ts
+// Rimuovere la riga:
+robots: { index: false, follow: false },
+
+// Aggiungere SEO completo:
+title: 'Violetta — Assistente di viaggio AI | 4GO FourTravel',
+description: 'Il tuo assistente personale di viaggio in italiano, 24/7. Piani da €29,90. Explorer, Traveller, Concierge.',
+alternates: { canonical: 'https://fourgo.it/violetta' },
+```
+
+Poi aggiungere `aggregateRating` nel JSON-LD e collegare i pulsanti di acquisto a Stripe/PayPal.
