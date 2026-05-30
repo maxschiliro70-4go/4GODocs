@@ -51,3 +51,33 @@
 - GA4 stream aggiornamento
 - noindex rimozione /demo-bot e /violetta
 - Gamma logo replace in 4 file
+
+## Aggiornamenti 30 Maggio 2026
+
+### Fix WhatsApp
+- Pre-messaggio immediato "⏳ Sto elaborando..." prima risposta AI
+- Fix storia conversazione (context sempre [] → carica da DB)
+- Aggiunto modello WaMessage (history come Telegram)
+- Backfill 28 messaggi da conversazioni esistenti
+- Escalation su richiesta prenotazione concreta
+
+### Fix Telegram / Violetta
+- Violetta non suggerisce più guide esterne — promuove 🎧
+- Non chiede foto se luogo già identificato dal testo
+- Fabbrica di Schindler aggiunta a ICONIC_PLACES
+- Fix badge WA — usa chiavi RECEIVED/IN_PROGRESS
+
+### Blog / SEO
+- Route 66 e Tanzania safari seoTitle aggiornati
+- Arcisate aggiunta come landing città + generate-city-content
+- 228 post source→autogen (fix contatori dashboard)
+- Turismo-sostenibile: sezione metodologia dati (Climatiq, BEIS, RF 1.9, ICAO)
+
+### Preventivo AI
+- Passa incluso/escluso reali dal DB
+- Gestisce destinazione non in catalogo con proposta su misura
+
+### Pending domani
+- Claude Code /ultrareview completo sul repo 4GO (prima run gratuita)
+  - Configurare con API key 4GO: claude config set apiKey sk-ant-XXXX
+  - Lanciare da directory 4-GO: /ultrareview
