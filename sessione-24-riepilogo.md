@@ -121,3 +121,41 @@
 **Piano:** Concierge €49.90 (differenziatore unico sul mercato italiano)
 
 **Sviluppo:** dopo Telnyx KYC, su branch develop, Claude Code review obbligatoria prima del merge
+
+## Strumenti da valutare/integrare
+
+### LangSmith (Langchain) — PROSSIMA SESSIONE
+- Traccia ogni chiamata AI (Telegram, WhatsApp, Email, Blog, Preventivi)
+- Dashboard per identificare allucinazioni sistematiche
+- Mostra prompt + risposta + latenza per ogni interazione
+- Piano gratuito: 5.000 trace/mese
+- **Integrazione:** webhook Telegram come primo test
+- **Non richiede Telnyx/Vapi** — funziona subito
+
+### Bland.ai
+- Testing automatico voice AI — simula centinaia di chiamate
+- Trova edge case e allucinazioni prima del lancio live
+- **Quando:** pre-lancio Vapi/Telnyx
+
+### Hamming.ai
+- Testing automatico voice agents
+- Complementare a Bland.ai per edge case
+- **Quando:** pre-lancio Vapi/Telnyx
+
+### Deepgram
+- STT alternativo a Groq Whisper
+- Più accurato su giapponese e coreano
+- **Quando:** sviluppo Violetta Traduttore Live
+
+### Speechmatics
+- STT specializzato lingue europee meno comuni
+- **Quando:** sviluppo Violetta Traduttore Live
+
+### Resemble AI
+- Clonazione voce + dizionario pronuncia personalizzato
+- Alternativa ElevenLabs con più controllo fonetica
+- **Quando:** ottimizzazione pronuncia pre-lancio voice
+
+### Braintrust
+- Monitoring LLM leggero, alternativa LangSmith
+- **Quando:** valutare se LangSmith non soddisfa
