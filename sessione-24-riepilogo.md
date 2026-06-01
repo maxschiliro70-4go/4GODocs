@@ -100,3 +100,24 @@
 ### Telnyx
 - Escalation finale inviata, risposta "actively working" 31 maggio
 - Follow-up inviato 01 giugno
+
+## Roadmap — Violetta Traduttore Live
+
+**Feature:** Traduzione in tempo reale via WebRTC — nessuna telefonata necessaria.
+
+**Flusso:**
+1. Cliente apre widget su fourgo.it/violetta o Telegram Web
+2. Preme "🎤 Avvia traduzione" — microfono attivo
+3. Parla in italiano tenendo il telefono in mezzo
+4. Groq Whisper trascrive → Claude traduce con contesto sessione → ElevenLabs riproduce in lingua locale
+5. Locale risponde → traduzione inversa in italiano nell'auricolare
+
+**Violetta conosce già:** destinazione, hotel, preferenze alimentari, itinerario — traduce con contesto, non solo parole.
+
+**Stack:** WebRTC (browser) + Groq Whisper streaming + Claude Haiku + ElevenLabs TTS
+
+**Lingue prioritarie:** Giapponese, Coreano, Russo, Arabo, Cinese, Francese, Spagnolo, Portoghese
+
+**Piano:** Concierge €49.90 (differenziatore unico sul mercato italiano)
+
+**Sviluppo:** dopo Telnyx KYC, su branch develop, Claude Code review obbligatoria prima del merge
