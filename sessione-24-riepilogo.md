@@ -159,3 +159,39 @@
 ### Braintrust
 - Monitoring LLM leggero, alternativa LangSmith
 - **Quando:** valutare se LangSmith non soddisfa
+
+## Aggiornamenti 02 Giugno 2026
+
+### LangSmith
+- Tracing attivo su Telegram, WhatsApp, Email AI
+- Input utente visibile, tag production/staging, alert allucinazioni su Telegram Emi
+- Contatore chiamate/token 30gg in admin/sistema
+
+### Integrazioni Violetta Telegram (6 layer paralleli)
+- **Perplexity sonar-pro + citations** — visti, vaccini, sicurezza, gastronomia
+- **Frankfurter** — tassi di cambio live (30+ valute)
+- **MAE viaggiaresicuri.it** — allerte sicurezza via Brave Search
+- **Google Places Details** — orari, telefono, link Maps luoghi specifici
+- **Rome2Rio** — trasporti multimodali (durate, no prezzi)
+- Farnesina API — email inviata a unita.crisi@esteri.it, aspettiamo risposta
+
+### Integrazioni Violetta WhatsApp (pre-vendita)
+- **Perplexity sonar-pro** — domande fattuali + gastronomia
+- **Duffel** — voli live con prezzi reali, trigger solo entro 10 messaggi
+- Duffel in modalità TEST — produzione in approvazione (1-3 giorni)
+
+### WhatsApp
+- Limite 30 messaggi: avviso a 25 con data/ora esatta reset
+- Reset automatico dopo 48 ore di inattività
+- Escalation con riassunto AI + contatti su TG e WA Massimo
+
+### Admin
+- admin/sistema: aggiunto LangSmith, Perplexity, Frankfurter, MAE, Open-Meteo, Google Places, Rome2Rio
+- admin/impostazioni: sezioni complete per tutti i nuovi servizi
+- Notifiche TG su soglie: ElevenLabs 80%, SerpApi 80%, LangSmith 80%, Telnyx <€3
+
+### Pending
+- Duffel produzione — approvazione in corso
+- Farnesina Web Services — email inviata
+- TikTok appeal — in attesa
+- Meta Business verification — SIM ok, in attesa auth pubblicazione
