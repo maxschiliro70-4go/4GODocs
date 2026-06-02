@@ -30,7 +30,8 @@
 
 ## Markup — DEFINITO
 
-- **Breve/medio raggio** (Europa, Nord Africa, Medio Oriente) → **15%**
+- **Corto raggio** (Europa) → **15%**
+- **Medio raggio** (Nord Africa, Medio Oriente, Turchia, Egitto) → **17%**
 - **Lungo raggio** (America, Asia, Oceania, Africa subsahariana) → **20%**
 
 Il markup viene applicato automaticamente da Violetta nella stima al cliente.
