@@ -28,14 +28,10 @@
 
 ---
 
-## Markup da definire con Massimo
+## Markup — DEFINITO
 
-> ⚠️ DA DECIDERE PRIMA DELL'INTEGRAZIONE
-
-Opzioni:
-- **Fisso** — es. €50/persona su voli, €20/notte su hotel
-- **Percentuale** — es. 10% su tutto
-- **Per fascia** — Europa/corto raggio vs lungo raggio
+- **Breve/medio raggio** (Europa, Nord Africa, Medio Oriente) → **15%**
+- **Lungo raggio** (America, Asia, Oceania, Africa subsahariana) → **20%**
 
 Il markup viene applicato automaticamente da Violetta nella stima al cliente.
 Gli operatori vedono sempre prezzo netto + markup + totale finale.
