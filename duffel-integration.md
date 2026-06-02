@@ -59,6 +59,22 @@ Gli operatori vedono sempre prezzo netto + markup + totale finale.
 - [ ] Duffel Payments con timer (link pagamento brandizzato 4GO)
 - [ ] 3DS integrato per pagamenti corporate
 
+### Nice to have
+- [ ] **Duffel Links (€99/mese)** — checkout brandizzato 4GO con timer, zero gestione carta lato nostro. Da valutare dopo aver capito i volumi.
+
+---
+
+## Da esplorare — Preventivi ad hoc su Duffel
+
+Come generare un preventivo personalizzato (volo + hotel + markup) da mandare al cliente senza che l'operatore debba costruirlo manualmente?
+
+Opzioni da analizzare:
+- Creare un endpoint `/api/admin/duffel-preventivo` che riceve destinazione/date/persone e restituisce volo + hotel con markup applicato
+- Generare un PDF/link condivisibile con il dettaglio del pacchetto
+- Integrare nella pagina admin preventivi esistente un tab "Cerca su Duffel"
+
+> ⚠️ Da approfondire con Massimo — capire il workflow operativo prima di sviluppare
+
 ---
 
 ## Note tecniche
