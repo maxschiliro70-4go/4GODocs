@@ -53,3 +53,35 @@
 - `20260602_aviationstack_counter`: aviationstackCalls, aviationstackMonth
 - `20260603_review_source`: Review.source
 - `20260603_location_trasporto`: Location.trasportoId
+
+## Aggiornamenti pomeriggio/sera
+
+### Video Publishing (Social AI tab 🎬)
+- Endpoint `/api/admin/video-publish`: generate-heygen-prompt, upload-blob, generate-captions, publish
+- Tab Video in `/admin/social`: genera prompt HeyGen → carica su Blob → caption AI per 5 social → pubblica
+- Facebook Page Token permanente configurato (non scade)
+- `FACEBOOK_PAGE_ID=1078312105357113`, `INSTAGRAM_ACCOUNT_ID=17841443227987195`
+- Threads, Pinterest, TikTok pronti (token mancanti)
+
+### Email AI fix
+- ESCALATED: risposta cliente menziona "Massimo Schilirò" esplicitamente
+- ESCALATED: secondo forward a Massimo include la risposta inviata al cliente
+- POTENTIAL: CC a massimo@fourgo.it già presente
+
+### Performance (pagine pubbliche)
+- `/quiz`: usa PreventivoModalDynamic invece di import diretto
+- `/admin/blog`: paginazione server-side 20 post (addio limit=all con 290+ post)
+
+### GA4
+- 5 eventi chiave configurati come conversioni: preventivo_inviato, form_contatti_inviato, contatto_whatsapp, contatto_telefono, purchase
+- Google Signals da attivare
+- Segmenti pubblico: visitatori pacchetti, richiesta preventivo, visitatori blog
+
+### Varie
+- GBP post: daily alle 8:00, seleziona pacchetto con più impressioni GSC e 0 clic
+- Brochure button ripristinato in scegli-pacchetto quando gammaUrl presente
+- multi-preventivo Gamma: fix 401 server-to-server (x-admin-secret)
+- TikTok review risubmit con descrizione multi-agenzia
+- Buffer come piano B per TikTok
+- Pinterest breaking change Feb 2027: non urgente, solo ads
+- Duffel Stays: follow-up email inviata
