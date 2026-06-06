@@ -2,8 +2,9 @@
 
 ## Stato attuale
 - Account creato: maxschiliro70@gmail.com
-- Piano: TEST (produzione in approvazione, 1-3 giorni)
-- API Key TEST: configurata su Vercel come `DUFFEL_API_KEY`
+- **Flights: PRODUZIONE APPROVATA** ✅
+- **Stays: test mode, approvazione produzione pending** ⏳
+- API Key configurata su Vercel come `DUFFEL_API_KEY`
 - Voli integrati su WhatsApp AI (trigger entro 10 messaggi)
 
 ---
@@ -41,10 +42,10 @@ Gli operatori vedono sempre prezzo netto + markup + totale finale.
 
 ## Roadmap implementazione
 
-### Fase 1 — dopo approvazione produzione
-- [ ] Sostituire API key test con live su Vercel
-- [ ] Definire markup standard con Massimo
-- [ ] Implementare Duffel Stays su WhatsApp
+### Fase 1 — Flights produzione ✅ / Stays pending
+- [x] Sostituire API key test con live su Vercel (Flights)
+- [x] Definire markup standard con Massimo
+- [ ] Implementare Duffel Stays su WhatsApp (dopo approvazione produzione)
 - [ ] Notifica operatori con link Duffel diretti (volo + hotel)
 
 ### Fase 2
