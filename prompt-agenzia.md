@@ -887,3 +887,50 @@ PaymentBlock e extra items visibili anche con status `PAID`.
 File in `public/firme-email/`. Logo embedded base64 (nessun alert Thunderbird). Social con tabella nested `align/valign center` (compatibile Thunderbird/Outlook). Firme: massimiliano (titolare, mobile), alessia (consulente, mobile +39 334 731 8073), inga (consulente), agenzia (team).
 
 *Ultimo aggiornamento: 2026-04-10*
+
+---
+
+## SESSIONE 4GO-28 — 2026-06-09
+
+### WhatsApp AI / Violetta — fix critici
+- **ReferenceError `from`→`phone`** in LangSmith trace (`/api/whatsapp/ai`) causava 500 su ogni messaggio
+- **ESCALATE in fondo al reply**: strip ESCALATE dal testo prima di inviarlo al cliente; webhook usa reply AI se presente
+- **History da DB**: ricostruisce history dai WaMessage quando context vuoto (evita welcome spurio dopo reply manuale admin)
+- **Trigger esplicito "operatore"**: scala immediatamente senza AI, notifica Telegram a Massimo
+- **Salvataggio outbound escalation**: messaggi di risposta ora salvati nel DB e visibili in admin
+- **Notifica assegnazione operatore**: assegnare contatto da admin social → WA + Telegram con contesto messaggi inbound
+
+### Farnesina Banner (home)
+- API: `https://www.viaggiaresicuri.it/ultima_ora/totale.json` → `{ ultima_ora: [...] }`
+- Campi usati: `titolo` (paese:testo), `testo` (HTML da strippare), `tsModifica` (timestamp Unix), `nazione` (ISO)
+- Cache 1h in `SiteSettings.farnesinaCacheData/farnesinaCacheAt`
+- Card colorate: rosso=salute, arancione=sicurezza/terremoti, ambra=generico
+- NO deep link SPA (404) — tutti i link puntano alla homepage `viaggiaresicuri.it`
+- Componente: `src/components/public/FarnesinaBanner.tsx`
+- Endpoint: `src/app/api/public/farnesina/route.ts`
+
+### AI Act Compliance — Reg. UE 2024/1689
+- **Scadenza**: 2 agosto 2026 (transitorio 2 dicembre 2026 per sistemi già live)
+- Welcome WA: disclosure "sistema di intelligenza artificiale", opzione operatore
+- Welcome Telegram: full disclosure + capacità complete + AI Act
+- ChatWidget: welcome AI Act compliant + footer link Informativa AI
+- Privacy Policy: sezione 12 (numerazione 1-13), versione 2.1, anchor `#ai`
+- Termini: sezione 12 con art. 50 Reg. UE 2024/1689
+- Footer: link "Informativa AI" → `/privacy#ai`
+- **Attenzione JS**: apostrofi in stringhe → usare doppi apici o backtick (causa syntax error build)
+
+### Campagne Email Commerciali (`/admin/campagne`)
+- Model DB: `CampagnaContatto`, `CampagnaTemplate`
+- 37 contatti B2B pre-caricati
+- Invio SMTP: from `info@fourgo.it`, reply-to `massimo@fourgo.it`, CC `info@fourgo.it`
+- Bulk send in batch da 5 (evita timeout Vercel 60s), retry 3x su 421 Aruba, pausa 3s tra mail
+- Firma ufficiale da `fourgo.it/firme-email`
+- Template variabili: `{{nome}}`, `{{azienda}}`
+
+### Fix minori
+- ItineraryMap: non renderizza se `mapCities` vuoto (ignora geoData residuo DB)
+- GBP anti-duplicato: match per parole chiave destination (fix Tenerife/Canarie)
+- Blog autogen: vieta date specifiche, solo formule temporali generiche
+- SERP scraper: solo `fourgo.it` conta (vecchio dominio ignorato)
+
+*Ultimo aggiornamento: 2026-06-09*
