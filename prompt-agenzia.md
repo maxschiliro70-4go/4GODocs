@@ -934,3 +934,10 @@ File in `public/firme-email/`. Logo embedded base64 (nessun alert Thunderbird). 
 - SERP scraper: solo `fourgo.it` conta (vecchio dominio ignorato)
 
 *Ultimo aggiornamento: 2026-06-09*
+
+## Sessione 31 (14 giugno 2026)
+- **Case Study**: tabella CaseStudy, pagina /storie, admin /admin/case-study in Comunicazioni. Sonnet con gold standard x5, anti-allucinazione, privacy assoluta. Reimage auto dopo approvazione. Comando Telegram /casestudy CODICE.
+- **GBP Insights**: Business Profile Performance API abilitata → dati reali in /admin/gbp
+- **GSC Report**: sezione GBP con delta 7gg → solo a Emi
+- **Review**: Google come principale, Trustpilot secondario. Giorno 1 TG+WA, giorni 2/3 WA+TG+email. Bentornat*.
+- **Icone**: Prenotazioni=ClipboardCheck, Case Study=Newspaper
