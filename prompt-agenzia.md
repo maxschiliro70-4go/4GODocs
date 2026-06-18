@@ -1,67 +1,85 @@
-# 4GO FourTravel — Sessione 34 (17 Giugno 2026)
+# 4GO FourTravel — Sessione 35 (18 Giugno 2026)
 
 ## Stack
-Next.js 15.5.16 + Prisma + Neon PostgreSQL + Vercel Pro | Repo: `github.com/emilianomarchesi-droid/4-GO` | main=prod | develop=staging
+Next.js 15.5.16 + Prisma + Neon PostgreSQL + Vercel Pro | branch develop = staging.fourgo.it (ep-sweet-rain) | main = produzione (ep-rapid-scene)
 
 ## Completato oggi
 
 ### Security
-- Next.js aggiornato 15.5.14 → 15.5.16 (fix SSRF WebSocket + auth bypass CVE-2026-44574/75/45109)
-- Middleware matcher fix: esclude .rsc e _next/data (CVE auth bypass)
-- Dipendenze vulnerabili aggiornate: nodemailer, uuid, postcss, @anthropic-ai/sdk
-- GitHub Actions: Semgrep + njsscan su push main/develop (CodeQL rimosso — richiede Advanced Security)
-- Dependabot abilitato: da 38 vulnerabilità → 3 residue non modificabili
-- Semgrep: 42 code findings tutti Acceptable risk (TLS Aruba, dangerouslySetInnerHTML da DB, regex admin-only)
+- Semgrep + njsscan GitHub Action su push main/develop
+- Dependabot: da 38 → 3 vulnerabilità residue
+- Next.js aggiornato a 15.5.16, middleware matcher fix CVE auth bypass
+- 42 Semgrep code findings → tutti Acceptable risk
 
-### Violetta Bot
-- Classificatore AI intent (Haiku, ~200ms) per navigazione vs audioguida — fallback regex
-- Pattern navigazione esteso: "come posso arrivare", "con la metro", "mezzi da/per"
-- Messaggio fallback foto: "Bella foto! 📸 Non sono riuscita a identificare il luogo automaticamente..."
-- Foto: chiede il luogo quando non riconosciuto
-- Regola anti-allucinazione geografica nel prompt analisi foto
-- LangSmith trace analisi foto con alert TG su allucinazione geografica
-- Traduzione con audio nativo ElevenLabs (come si dice X in francese → testo + audio)
-- Lock anti-doppio click audioguida (audioguideLock TIMESTAMPTZ, 8 min)
-- Petit Palais + musei parigini in ICONIC_PLACES → Sonnet
-- Fix filtro email sistema Aruba da inbox preventivi
+### Vapi Interprete — develop
+- Campo `interpreteAttivo Boolean @default(false)` su ManualBooking (schema Prisma + migrate + migrazione ufficiale)
+- Toggle UI admin nel dossier prenotazione (€49.90/viaggio)
+- API PATCH manual-bookings include `interpreteAttivo`
+- API GET bookings include `interpreteAttivo` con conversione boolean corretta
+- Tasto 🌐 Interprete nella keyboard Telegram — visibile solo se `interpreteAttivo=true`
+- Fix: keyboard mostrata anche senza pacchetto associato
 
-### Blog & SEO
-- Fix duplicati: existingDestTypeSet su KEYWORD_TARGETS e pool pacchetti
-- action=draft-ids per mettere in DRAFT articoli specifici
-- action=restore-drafts per ripristinare autogen in DRAFT
-- action=update-meta per aggiornare title/excerpt via URL
-- Notifica TG per articoli senza foto + auto-fix reimage
-- Soglia foto duplicate abbassata a >1
-- Eliminato source.unsplash fallback (causa foto duplicate URL diversi stessa foto)
-- Slug lunghissimi accorciati nel DB + redirect 301 (Marocco x2, Australia-Fiji)
-- Sitemap: priority faq 0.8, privacy 0.5, changeFrequency aggiornata
-- Meta SEO ottimizzati: Grecia sicurezza, Vaccini Cina+Giappone+Corea, Valigia Sicilia
+### Staging setup risolto
+- DATABASE_URL Preview → ep-sweet-rain (separato da produzione)
+- Webhook bot test: `https://staging.fourgo.it/api/telegram/webhook?x-vercel-protection-bypass=IIyeP5zHwfzo3zyFAwtZuheCIds3YN7c`
+- Sync schema staging: 123/135 colonne mancanti aggiunte via migrate endpoint
+- Migrazioni Prisma create per: interpreteAttivo, Inquiry (aiReply/source), ManualBooking fields
+
+### DeepL
+- Piano API Developer Free: 1.000.000 caratteri/anno, scade 18/06/2027
+- DEEPL_API_KEY configurata su Vercel
+- Sezione in /admin/sistema e /admin/impostazioni
+- Auto-detect endpoint Free (:fx) vs Pro
 
 ### Newsletter
-- Bounce: "Blocca" invece di "Elimina" (emailBlacklisted:true su Brevo)
+- Bounce: blocca su Brevo invece di eliminare
 - Import preventivo: check bounce/unsubscribed prima dell'importazione
-- UI: mostra "✅ già in blocklist" se bounce già protetti
+- Mostra "✅ già in blocklist" se bounce già protetti
 
-### Roadmap aggiornata
-- Lakera Guard — protezione Violetta da prompt injection (al lancio piani commerciali)
-- Harak — red-teaming LLM pre-lancio commerciale Violetta
-- Tasto 🌐 Interprete Violetta Concierge: WebRTC Vapi, €49.90/viaggio, interpreteAttivo su ManualBooking
-- Twilio configurazione su develop quando si parte
+### Blog
+- Fix duplicati: existingDestTypeSet su KEYWORD_TARGETS e pool pacchetti
+- Eliminato source.unsplash (causa foto duplicate)
+- Notifica TG per articoli senza foto + auto-fix reimage (soglia >1)
+- action=draft-ids, restore-drafts, update-meta
+- Meta SEO: Grecia, Vaccini Cina+Giappone+Corea, Valigia Sicilia
+- Slug corti: Marocco x2, Australia-Fiji + redirect 301
+
+### Violetta Bot
+- Classificatore AI intent (Haiku) per navigazione vs audioguida + fallback regex
+- Foto: regola anti-allucinazione, chiede luogo se non riconosciuto
+- LangSmith trace analisi foto con alert allucinazione
+- Traduzione con audio nativo ElevenLabs
+- Lock anti-doppio click audioguida (8 min)
+- Petit Palais e musei parigini in ICONIC_PLACES → Sonnet
+- Fallback foto: "Bella foto! 📸 Non sono riuscita a identificare..."
+- Filtro email sistema Aruba da inbox preventivi
 
 ## Pendente
+- [ ] Passo 3 Vapi: callback tasto 🌐 → genera link WebRTC con lingua dalla destinazione
 - [ ] SIAE: stampare Mod.349, firmare, CD-R, bonifico €126,62, raccomandata Roma
 - [ ] Voci ElevenLabs per lingua in /admin/sistema (almeno fr) per audio traduzione
-- [ ] Twilio + Vapi Interprete su develop
-- [ ] Campo interpreteAttivo su ManualBooking
-- [ ] Gamma logo replacement (4 file): 4go-gamma.vercel.app → fourgo.it
+- [ ] Gamma logo replacement (4 file)
 - [ ] noindex su /demo-bot e /violetta
 - [ ] Meta Business verification
 - [ ] GBP: 40 città aree di servizio
-- [ ] GSC: richiedere indicizzazione manuale per 14 URL scoperti non indicizzati
+- [ ] Meta App Review: risottomettere con nuovi screencast
+
+## Roadmap security
+- GitLeaks — secrets in git history
+- Zizmor — GitHub Actions workflow vulnerabilities
+- Lakera Guard — protezione Violetta da prompt injection (al lancio piani commerciali)
+- Harak — red-teaming LLM pre-lancio
+
+## Roadmap Vapi Concierge
+- Deepgram Nova-3: $0.0077/min streaming, $200 free tier
+- DeepL API: 1M chars/anno free fino 18/06/2027
+- Twilio +390250020031 configurato su Vercel
+- Passo 3: callback 🌐 → Vapi WebRTC link → lingua automatica dalla destinazione
 
 ## Dati tecnici
-- GitHub token: vedi Vercel env GITHUB_TOKEN (non salvare in chiaro nei docs)
+- Staging webhook bypass: `IIyeP5zHwfzo3zyFAwtZuheCIds3YN7c`
+- Staging DB: Neon ep-sweet-rain-a9rqftzk.gwc.azure.neon.tech
+- Bot test: @FourGoTraveltestBot
 - MIGRATE_SECRET: `4go2026`
-- Twilio: ACCOUNT_SID, API_KEY, API_SECRET, PHONE_NUMBER=+390250020031 su Vercel
-- Blog: 366 articoli PUBLISHED, 0 duplicati reali, 0 foto mancanti
 - Next.js: 15.5.16
+- Blog: 366 articoli PUBLISHED, 0 duplicati, 0 foto mancanti
