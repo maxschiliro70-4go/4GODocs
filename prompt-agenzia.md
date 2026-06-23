@@ -1,85 +1,73 @@
-# 4GO FourTravel — Sessione 35 (18 Giugno 2026)
+# 4GO FourTravel — Sessione 37 (22 Giugno 2026)
 
 ## Stack
-Next.js 15.5.16 + Prisma + Neon PostgreSQL + Vercel Pro | branch develop = staging.fourgo.it (ep-sweet-rain) | main = produzione (ep-rapid-scene)
+Next.js 15.5.16 + Prisma + Neon PostgreSQL + Vercel Pro
+- main = fourgo.it | develop = staging.fourgo.it
+- Test bot: @FourGoTraveltestBot
 
-## Completato oggi
+## Regole Branch (CRITICHE)
+- develop → staging, test, feature
+- main → fix urgenti produzione DIRETTI (no cherry-pick da develop)
+- Mai double-build: se fix va su main, committi su main direttamente
 
-### Security
-- Semgrep + njsscan GitHub Action su push main/develop
-- Dependabot: da 38 → 3 vulnerabilità residue
-- Next.js aggiornato a 15.5.16, middleware matcher fix CVE auth bypass
-- 42 Semgrep code findings → tutti Acceptable risk
+## Flusso Ristorante — Stato Finale
+- Assistant base: sempre VAPI_RESTAURANT_FLUX (686274c0)
+- Transcriber override: nova-3 multi Flux, nova-3 monolingua per altre lingue
+- Modello: Haiku (NO temperature in override — rompe Vapi)
+- Posto → "non c'è problema ovunque va bene" nella lingua del ristorante
+- Orario alternativo → accetta sempre senza discutere
+- Post-call: Haiku estrae orario confermato → notifica cliente se diverso
+- temperature:0 in assistantOverrides rompeva tutto l'override → rimosso
 
-### Vapi Interprete — develop
-- Campo `interpreteAttivo Boolean @default(false)` su ManualBooking (schema Prisma + migrate + migrazione ufficiale)
-- Toggle UI admin nel dossier prenotazione (€49.90/viaggio)
-- API PATCH manual-bookings include `interpreteAttivo`
-- API GET bookings include `interpreteAttivo` con conversione boolean corretta
-- Tasto 🌐 Interprete nella keyboard Telegram — visibile solo se `interpreteAttivo=true`
-- Fix: keyboard mostrata anche senza pacchetto associato
+## Notifiche — Flusso Completo
+### Quando scala (tutti i canali):
+- Email a OPERATOR_EMAIL (Massimo) — NON a info@fourgo.it (loop AI)
+- TG a tutti (Massimo, Alessia, Inga, Emi)
+- WA a Massimo
 
-### Staging setup risolto
-- DATABASE_URL Preview → ep-sweet-rain (separato da produzione)
-- Webhook bot test: `https://staging.fourgo.it/api/telegram/webhook?x-vercel-protection-bypass=IIyeP5zHwfzo3zyFAwtZuheCIds3YN7c`
-- Sync schema staging: 123/135 colonne mancanti aggiunte via migrate endpoint
-- Migrazioni Prisma create per: interpreteAttivo, Inquiry (aiReply/source), ManualBooking fields
+### Contact Form ✅
+- Risposta immediata al cliente via email
+- Email a OPERATOR_EMAIL + CC info@fourgo.it
+- TG a tutti + WA Massimo
 
-### DeepL
-- Piano API Developer Free: 1.000.000 caratteri/anno, scade 18/06/2027
-- DEEPL_API_KEY configurata su Vercel
-- Sezione in /admin/sistema e /admin/impostazioni
-- Auto-detect endpoint Free (:fx) vs Pro
+### WhatsApp chatbot ✅
+- Risposta immediata al cliente via WA
+- Su escalation: TG tutti + WA Massimo + email Massimo
+- Scala automaticamente dopo qualificazione completa (destinazione + periodo + preferenze)
 
-### Newsletter
-- Bounce: blocca su Brevo invece di eliminare
-- Import preventivo: check bounce/unsubscribed prima dell'importazione
-- Mostra "✅ già in blocklist" se bounce già protetti
+### Email-ai ✅
+- Risposta immediata al cliente via email
+- Su escalation: TG tutti + WA Massimo + email Massimo
+- Guard doppio invio: skip se thread aggiornato negli ultimi 60s
 
-### Blog
-- Fix duplicati: existingDestTypeSet su KEYWORD_TARGETS e pool pacchetti
-- Eliminato source.unsplash (causa foto duplicate)
-- Notifica TG per articoli senza foto + auto-fix reimage (soglia >1)
-- action=draft-ids, restore-drafts, update-meta
-- Meta SEO: Grecia, Vaccini Cina+Giappone+Corea, Valigia Sicilia
-- Slug corti: Marocco x2, Australia-Fiji + redirect 301
+### Quiz ✅ (aggiunto oggi)
+- TG a tutti + WA Massimo + email OPERATOR_EMAIL dopo completamento
 
-### Violetta Bot
-- Classificatore AI intent (Haiku) per navigazione vs audioguida + fallback regex
-- Foto: regola anti-allucinazione, chiede luogo se non riconosciuto
-- LangSmith trace analisi foto con alert allucinazione
-- Traduzione con audio nativo ElevenLabs
-- Lock anti-doppio click audioguida (8 min)
-- Petit Palais e musei parigini in ICONIC_PLACES → Sonnet
-- Fallback foto: "Bella foto! 📸 Non sono riuscita a identificare..."
-- Filtro email sistema Aruba da inbox preventivi
+### WhatsApp deduplicazione ✅
+- Guard su wamid: skip se già processato (evita doppia risposta su retry Meta)
 
-## Pendente
-- [ ] Passo 3 Vapi: callback tasto 🌐 → genera link WebRTC con lingua dalla destinazione
-- [ ] SIAE: stampare Mod.349, firmare, CD-R, bonifico €126,62, raccomandata Roma
-- [ ] Voci ElevenLabs per lingua in /admin/sistema (almeno fr) per audio traduzione
-- [ ] Gamma logo replacement (4 file)
-- [ ] noindex su /demo-bot e /violetta
-- [ ] Meta Business verification
-- [ ] GBP: 40 città aree di servizio
-- [ ] Meta App Review: risottomettere con nuovi screencast
+## Archiviazione Post-Viaggio
+- Giorno 1: ringraziamento TG+WA
+- Giorno 2-3: recensione email+TG+WA
+- Giorno 5: ARCHIVIATA + notifica TG a Emi SOLO se violettaPlan presente
+- Case study admin: mostra solo booking con violettaPlan
 
-## Roadmap security
-- GitLeaks — secrets in git history
-- Zizmor — GitHub Actions workflow vulnerabilities
-- Lakera Guard — protezione Violetta da prompt injection (al lancio piani commerciali)
-- Harak — red-teaming LLM pre-lancio
+## Lakera Whitelist
+- Aggiunto: mangi, mangiamo, si mangia
 
-## Roadmap Vapi Concierge
-- Deepgram Nova-3: $0.0077/min streaming, $200 free tier
-- DeepL API: 1M chars/anno free fino 18/06/2027
-- Twilio +390250020031 configurato su Vercel
-- Passo 3: callback 🌐 → Vapi WebRTC link → lingua automatica dalla destinazione
+## Infra-Status Fix
+- Vapi check: GET /assistant?limit=1 (non assistant ID hardcoded)
+- Vercel soglie: 950 orange, 1200 red (deploy illimitati su Pro)
 
-## Dati tecnici
-- Staging webhook bypass: `IIyeP5zHwfzo3zyFAwtZuheCIds3YN7c`
-- Staging DB: Neon ep-sweet-rain-a9rqftzk.gwc.azure.neon.tech
-- Bot test: @FourGoTraveltestBot
-- MIGRATE_SECRET: `4go2026`
-- Next.js: 15.5.16
-- Blog: 366 articoli PUBLISHED, 0 duplicati, 0 foto mancanti
+## SEO Città
+- 41 pagine in sitemap e homepage
+- Link interni da ogni post blog
+- MilanToday su tutte le pagine città
+- type=cities: https://fourgo.it/api/admin/index-google?secret=4go2026&type=cities
+
+## Pending
+- SIAE raccomandata A/R
+- Telnyx numero italiano
+- Merge develop→main completo (molte feature su develop)
+- noindex /violetta e /demo-bot da rimuovere al lancio
+- WhatsApp Business Meta pending
