@@ -1,67 +1,42 @@
 # 4GO FourTravel — Sessione 4GO-22 (24 Giugno 2026)
 
 ## Stato branch
-- **main** `4391c2ed` — produzione, stabile, tutti i fix applicati
-- **develop** `679f2c82` — Violetta/Vapi/interprete + 17 cherry-pick fix da main + schema allineato
+- **main** `fea79ec1` — produzione stabile, tutti i fix applicati
+- **develop** `e02216cb` — Violetta/Vapi/interprete + 17 cherry-pick fix + schema + fix intolleranze
 
-## Review completa con Claude Code
-Sessione di review sistematica develop..main su tutto il codebase. Trovati e fixati:
+## Review completa codebase con Claude Code
+Bug critici trovati e fixati su main, poi cherry-pick su develop (17 commit).
 
-### Bug critici (crash garantiti)
-- Stripe webhook: `year` undefined nel path normale → ReferenceError su ogni pagamento
-- preventivi/package: TDZ `chosen` prima di `totalAmt` → crash sendPaymentLinks
-- preventivi/package: `updateInsurance` senza `data` → PrismaClientValidationError
-- cron/gbp-post: `pkg` out of scope → ReferenceError su ogni run
-- cron/email-followup: enum invalidi ThreadStatus → 500 su ogni run
-- case-study: `firstName` non dichiarato → crash su ogni generazione
-- send-documents: `getFirmaAgenzia` usa `botUsername` non in scope
-- telegram/webhook: `getAIResponse` con argomenti sbagliati → crash Explorer/Traveller senza ristoranti
-- gemini-translate-token: espone GEMINI_API_KEY raw → fix proxy server-side
+### Bloccanti fixati
+- Stripe: year undefined → ReferenceError su ogni pagamento
+- preventivi/package: TDZ chosen + updateInsurance senza data
+- cron/gbp-post + email-followup: crash garantiti su ogni run
+- case-study: firstName non dichiarato
+- send-documents: botUsername out of scope
+- telegram/webhook: getAIResponse args sbagliati
+- gemini-translate-token: API key esposta raw
 
 ### Sicurezza
-- GBP auto-reply: rispondeva con testo positivo a recensioni 1★ → skip rating ≤3
-- GBP business-info: updateMask non encodato → Google poteva cancellare campi
-- PayPal capture: plan preso da URL non validato → possibile upgrade non pagato
-- VioletaSubscription: no idempotency → duplicati su retry Stripe/PayPal
-- blog-autogen: delete-dupes cancellava TUTTI i draft → guard su publishedSlugs
-- WA dedup: colonna `value` inesistente → dedup mai funzionato
+- GBP auto-reply positiva su recensioni negative → skip rating ≤3
+- PayPal plan da URL non validato → fix price check
+- WA dedup colonna sbagliata → fix
 
-### Fix funzionali
-- Email-ai/list: enum invalidi ThreadStatus → sempre vuoto
-- Email-ai/poll: `MASSIMO_WA_NUMBER` sbagliato → WA escalation mai inviata
-- WA webhook: `tgProcessedUpdates` → fix colonna
-- Cron password-expiry: solo 3 admin hardcoded → tutti gli admin notificati
-- Reviews: take:100 → limit=all per consumers
-- Brevo-import: unbounded Promise.all → batch 5 + skip 429
-- Pacchetti page: originalPrice mancante dal map → badge sconto mai visibile
-- ItineraryMap: early return prima degli hooks → Rules of Hooks violation
-- Cron/inbox-organizer: seqno invece di UID → email sbagliate archiviate
-- Social page: POST_PLATFORMS duplicata → build error
+### Schema e migrate
+- flowContext, interpreterAssistants, tgProcessedUpdates, repliedAt, retryCount, nextRetryAt aggiunti al migrate endpoint e schema Prisma
 
-### Schema e DB
-- Aggiunti a schema.prisma: `flowContext` (TelegramSession), `interpreterAssistants`, `tgProcessedUpdates` (SiteSettings), `TgProcessedUpdate` model, `EmailThread.repliedAt`
-- Migrate endpoint aggiornato con tutte le colonne
-- develop schema riconciliato con tutti i modelli raw-SQL
+## Video Publishing (main)
+Instagram ✅ Pinterest ✅ TikTok ✅ (inbox) HeyGen auto-extract ✅
 
-## Video Publishing — Completato su main
-- Instagram: polling status_code FINISHED (max 90s)
-- Pinterest: 4-step flow S3 + bottone "Pubblica Pin" separato (async, evita timeout 120s)
-- TikTok: chunk unico, SEND_TO_USER_INBOX, caption manuale dall'app
-- Facebook/Threads: pending Meta business verification
-- HeyGen: auto-estrazione MP4 da URL pagina via `v1/video_status.get`
-- UI: publishedPlatforms traccia ✅, box giallo social mancanti, TikTok rimosso da Post AI
+## Violetta develop
+- Lakera: indirizzi stradali in whitelist
+- botUsername dinamico staging/prod
+- Intolleranze: tradotte con Haiku su TG, aggiunte al firstMessage Vapi
 
-## Pending aperti
-- Secret `4go2026` nel bundle client admin (design task)
-- SSRF video-publish allowlist domini (design task)
-- Merge develop→main Violetta: dopo test su staging + autorizzazione esplicita
-- Ruotare GitHub PAT in origin URL PC Violetta
+## Regola assoluta
+NESSUN merge develop→main senza test staging + review Claude Code + autorizzazione Emi
 
-## Regola assoluta confermata
-NESSUN merge develop→main senza:
-1. Test su staging (develop) con viaggi reali
-2. Review con Claude Code /review develop..main
-3. Autorizzazione esplicita di Emi
-
-## ultrareview cost
-4 run a ~$49 ciascuna = ~$198 totale. Le run gratuite erano scadute il 5 maggio 2026.
+## Pending
+- Secret 4go2026 nel bundle client (design task)
+- SSRF video-publish (design task)  
+- Merge Violetta: dopo test staging completati
+- Rotare PAT GitHub PC Violetta
