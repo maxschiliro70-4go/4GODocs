@@ -1,42 +1,37 @@
-# 4GO FourTravel — Sessione 4GO-22 (24 Giugno 2026)
+# 4GO FourTravel — Sessione 4GO-24 (25 Giugno 2026)
 
 ## Stato branch
-- **main** `fea79ec1` — produzione stabile, tutti i fix applicati
-- **develop** `e02216cb` — Violetta/Vapi/interprete + 17 cherry-pick fix + schema + fix intolleranze
+- **main** `7beb850e` — produzione stabile
+- **develop** `e02216cb` — Violetta/Vapi/interprete (non mergiato)
 
-## Review completa codebase con Claude Code
-Bug critici trovati e fixati su main, poi cherry-pick su develop (17 commit).
+## Completato in sessione 4GO-24
 
-### Bloccanti fixati
-- Stripe: year undefined → ReferenceError su ogni pagamento
-- preventivi/package: TDZ chosen + updateInsurance senza data
-- cron/gbp-post + email-followup: crash garantiti su ogni run
-- case-study: firstName non dichiarato
-- send-documents: botUsername out of scope
-- telegram/webhook: getAIResponse args sbagliati
-- gemini-translate-token: API key esposta raw
+### ChatWidget beep — storia completa
+Il beep funziona con questo meccanismo:
+- `_sharedAudioCtx` creato a livello modulo al primo gesto utente (click/touch/keydown)
+- Il beep usa `getAudioCtx()` → `_sharedAudioCtx` già sbloccato
+- Se `suspended` → `ctx.resume().then(playBeep)`, se `running` → `playBeep()` diretto
+- Note: 523Hz + 880Hz + 1320Hz, dur 0.4s, gap 0.5s, volume 1.0
+- Commit funzionante: `7beb850e`
 
-### Sicurezza
-- GBP auto-reply positiva su recensioni negative → skip rating ≤3
-- PayPal plan da URL non validato → fix price check
-- WA dedup colonna sbagliata → fix
+**Cosa NON funziona:**
+- `new AudioContext()` dentro setTimeout → bloccato da Chrome autoplay policy
+- `new Audio('/beep.wav')` → Chrome blocca senza gesto utente previa
+- File WAV generato con Python → silenzioso in Chrome (formato non compatibile)
+- Note brevi (<0.2s) → spesso non si sentono
 
-### Schema e migrate
-- flowContext, interpreterAssistants, tgProcessedUpdates, repliedAt, retryCount, nextRetryAt aggiunti al migrate endpoint e schema Prisma
+**Regola**: non toccare il meccanismo del beep. Se si deve modificare, cambiare solo durata/frequenza/volume.
 
-## Video Publishing (main)
-Instagram ✅ Pinterest ✅ TikTok ✅ (inbox) HeyGen auto-extract ✅
+### Fix applicati su main
+- ChatWidget beep: resume AudioContext prima di suonare (`26b6fe8b`)
+- ChatWidget: X popup chiude ma non dismisses permanentemente (`62e03678`)
+- beep.wav stereo 44100Hz in `/public/`
+- `/api/beep` route con Content-Type audio/wav corretto
+- next.config: Content-Type audio/wav per /beep.wav
 
-## Violetta develop
-- Lakera: indirizzi stradali in whitelist
-- botUsername dinamico staging/prod
-- Intolleranze: tradotte con Haiku su TG, aggiunte al firstMessage Vapi
-
-## Regola assoluta
-NESSUN merge develop→main senza test staging + review Claude Code + autorizzazione Emi
-
-## Pending
-- Secret 4go2026 nel bundle client (design task)
-- SSRF video-publish (design task)  
-- Merge Violetta: dopo test staging completati
-- Rotare PAT GitHub PC Violetta
+### Pending
+- Beep: note "slow motion" — accettabile per ora
+- X popup ricompare dopo 12s: da verificare dopo deploy
+- Merge develop→main Violetta: dopo test staging + autorizzazione Emi
+- Facebook/Threads video: pending Meta business verification
+- TikTok Direct Post scope: in attesa approvazione
