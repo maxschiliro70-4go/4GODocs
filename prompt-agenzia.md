@@ -1,37 +1,70 @@
-# 4GO FourTravel — Sessione 4GO-24 (25 Giugno 2026)
+# 4GO FourTravel — Prompt Agenzia (aggiornato 29 Giugno 2026)
 
 ## Stato branch
-- **main** `7beb850e` — produzione stabile
-- **develop** `e02216cb` — Violetta/Vapi/interprete (non mergiato)
+- **main** `0d8ad2df` — produzione
+- **develop** `a8d9b1d5` — Violetta staging (noindex attivo)
 
-## Completato in sessione 4GO-24
+## Stack
+Next.js 15 + Prisma + Neon PostgreSQL + Vercel Pro  
+Repo: `github.com/emilianomarchesi-droid/4-GO`  
+Branch: `main` (prod) / `develop` (staging: `staging.fourgo.it`, DB: `ep-sweet-rain`)
 
-### ChatWidget beep — storia completa
-Il beep funziona con questo meccanismo:
-- `_sharedAudioCtx` creato a livello modulo al primo gesto utente (click/touch/keydown)
-- Il beep usa `getAudioCtx()` → `_sharedAudioCtx` già sbloccato
-- Se `suspended` → `ctx.resume().then(playBeep)`, se `running` → `playBeep()` diretto
-- Note: 523Hz + 880Hz + 1320Hz, dur 0.4s, gap 0.5s, volume 1.0
-- Commit funzionante: `7beb850e`
+## Persone
+- **Massimo** (Schilirò) — titolare, autorizza PAGATO, escalation WA/TG
+- **Alessia**, **Inga** — operatori, ricevono notifiche TG via `notifyAll()`
+- **Emi** — sviluppatore, riceve alert tecnici
 
-**Cosa NON funziona:**
-- `new AudioContext()` dentro setTimeout → bloccato da Chrome autoplay policy
-- `new Audio('/beep.wav')` → Chrome blocca senza gesto utente previa
-- File WAV generato con Python → silenzioso in Chrome (formato non compatibile)
-- Note brevi (<0.2s) → spesso non si sentono
+## Account chiave
+- `MIGRATE_SECRET=4go2026` | Admin: `/admin` (NextAuth + MFA TOTP)
+- Vapi: `maxschiliro70@gmail.com` | Assistant: `640e941e` | PAYG ~$0.11/min
+- Twilio: `+390250020031` attivo (bypassato Telnyx KYC)
+- GitHub token (giugno 2026): `[GITHUB_TOKEN — vedere Vercel env]`
+- Staging bot: `@FourGoTraveltestBot` token `8996155049:AAEybge6f7HP3ZjvJ397CcQQrXbyfFnENWc`
 
-**Regola**: non toccare il meccanismo del beep. Se si deve modificare, cambiare solo durata/frequenza/volume.
+## Violetta™
+- Trademark UIBM n.302026000109033, 15/06/2026, classi 39+42
+- Piani: Explorer €29.90 / Traveller €39.90 / Concierge €49.90
+- Pagina: `/violetta` (noindex fino a go-live)
+- Voice ElevenLabs: `gfKKsLN1k0oYYN9n2dXX`
 
-### Fix applicati su main
-- ChatWidget beep: resume AudioContext prima di suonare (`26b6fe8b`)
-- ChatWidget: X popup chiude ma non dismisses permanentemente (`62e03678`)
-- beep.wav stereo 44100Hz in `/public/`
-- `/api/beep` route con Content-Type audio/wav corretto
-- next.config: Content-Type audio/wav per /beep.wav
+## Vapi ristorante
+- Assistant sempre Flux `686274c0`
+- Transcriber: Nova-3 monolingua per lingue supportate, `multi` per le altre
+- `voice.speed=0.8` su dashboard Vapi
+- `temperature` NON supportato in `assistantOverrides`
+- 36 lingue con template completo + step3 colloquiale + step3_no_alternative
+- LANG_TO_ISO: mai codice paese (en non GB)
+- Lakera: skip durante flusso ristorante attivo
+- Check 50km: se indirizzo >50km dalla destinazione → chiede conferma
+- `triedRestaurants` tracciato, radius ×2 se lista esaurita
 
-### Pending
-- Beep: note "slow motion" — accettabile per ora
-- X popup ricompare dopo 12s: da verificare dopo deploy
-- Merge develop→main Violetta: dopo test staging + autorizzazione Emi
-- Facebook/Threads video: pending Meta business verification
-- TikTok Direct Post scope: in attesa approvazione
+## Blog autogen
+- Cron: 6:00-6:45 ogni 5 min + fix-images alle 7:00
+- `normalizeImageUrl()`: confronta solo pathname (no query params Pexels/Pixabay/Unsplash)
+- Check anti-duplicato coverImage nel POST /api/admin/blog
+- COUNTRY_MAP aggrega destinazioni correlate
+- Anno rimosso da titoli/slug nuovi e esistenti
+- Actions: `fix-images`, `fix-years`, `fix-slugs`, `audit`, `fix-duplicates`
+- Redirect 301 automatico slug-con-anno → slug-senza-anno
+
+## AI Act (scadenza 2 agosto 2026) — COMPLETATO
+- Disclosure AI: WA/TG/ChatWidget/social caption ✅
+- Alfabetizzazione: Massimo/Alessia/Inga confermato 29/06/2026 ✅
+- DPIA: completata, da firmare ✅
+- FRIA: esclusione motivata (rischio limitato), da firmare ✅
+- admin/gdpr: 4 card tutte ✅
+
+## Regole assolute
+1. Leggere file PRIMA di modificare — mai commit speculativi
+2. webhook/route.ts, middleware, auth, pagamenti, schema DB → sempre su develop
+3. Merge develop→main solo dopo staging + autorizzazione esplicita Emi
+4. Nuove colonne DB nel migrate endpoint come `ALTER TABLE IF NOT EXISTS`
+5. Prisma schema-external columns → `$queryRawUnsafe` / `$executeRawUnsafe`
+
+## Prossimi step
+1. Test russo completo su staging
+2. Cherry-pick develop→main (autorizzazione Emi)
+3. SIAE raccomandata A/R
+4. DPIA/FRIA firma Massimo
+5. TikTok: attendere review
+6. Violetta go-live: rimuovi noindex → GSC → Product Hunt / There's An AI For That / Futurepedia / BotList
