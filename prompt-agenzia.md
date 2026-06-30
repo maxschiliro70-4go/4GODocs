@@ -1,7 +1,7 @@
-# 4GO FourTravel — Prompt Agenzia (aggiornato 29 Giugno 2026)
+# 4GO FourTravel — Prompt Agenzia (aggiornato 30 Giugno 2026 — 4GO-23)
 
 ## Stato branch
-- **main** `0d8ad2df` — produzione
+- **main** `98be316` — produzione
 - **develop** `a8d9b1d5` — Violetta staging (noindex attivo)
 
 ## Stack
@@ -46,13 +46,38 @@ Branch: `main` (prod) / `develop` (staging: `staging.fourgo.it`, DB: `ep-sweet-r
 - Anno rimosso da titoli/slug nuovi e esistenti
 - Actions: `fix-images`, `fix-years`, `fix-slugs`, `audit`, `fix-duplicates`
 - Redirect 301 automatico slug-con-anno → slug-senza-anno
+- Blog paginato: `?page=N` con skip/take Prisma, ~500 articoli navigabili
 
 ## AI Act (scadenza 2 agosto 2026) — COMPLETATO
 - Disclosure AI: WA/TG/ChatWidget/social caption ✅
 - Alfabetizzazione: Massimo/Alessia/Inga confermato 29/06/2026 ✅
-- DPIA: completata, da firmare ✅
-- FRIA: esclusione motivata (rischio limitato), da firmare ✅
+- DPIA: completata, firmata, archiviata ✅
+- FRIA: esclusione motivata, firmata, archiviata ✅
 - admin/gdpr: 4 card tutte ✅
+
+## Performance (lab PSI mobile — 30 Giugno 2026)
+| Pagina | Score | LCP | TBT |
+|--------|-------|-----|-----|
+| Homepage | 92 | 2.1s | 240ms |
+| Pacchetti | 89 | 2.7s | 313ms |
+| Chi Siamo | 90 | 3.0s | 173ms |
+| Contatti | 65 | 11.3s | 98ms |
+| Blog | 97 | 2.3s | 148ms |
+| Quando Viaggiare | 89 | 2.1s | 398ms |
+
+Fix applicati in 4GO-23 (main):
+- `/blog`: `priority` sulla featured image → 65/9.9s → 97/2.3s
+- `/quando-viaggiare`: fetch packages server-side RSC, passa `initialPackages` → 57/29.8s → 89/2.1s
+- `/contatti`: TBT 503ms→98ms (BgSlideshow già dynamic(), varianza PSI confermata)
+- `ssr:false` NON permesso in RSC Next.js 15 — usare solo in Client Component
+- Homepage 16.7s LCP era causato da `1cc86c5` (rimozione opacity:0): ora PSI misura hero image (Pexels via /_next/image) invece di h1. Risolto spontaneamente (92/2.1s) — monitorare field data CrUX.
+
+## Cron attivi (tutti su fourgo.it)
+- preventivi-poll (*/5), blog-autogen (4×/day 06:00–06:15 + fix-images 07:00)
+- blog-check (1° del mese 8:00), password-expiry (09:00), appointment-reminders (ogni min)
+- inbox-organizer (Lun 7:30 — su cron-job.org E Vercel Cron, maxDuration=60)
+- gbp-post (daily)
+- **Regola**: ogni cron va registrato SIA su cron-job.org SIA in vercel.json
 
 ## Regole assolute
 1. Leggere file PRIMA di modificare — mai commit speculativi
@@ -60,13 +85,23 @@ Branch: `main` (prod) / `develop` (staging: `staging.fourgo.it`, DB: `ep-sweet-r
 3. Merge develop→main solo dopo staging + autorizzazione esplicita Emi
 4. Nuove colonne DB nel migrate endpoint come `ALTER TABLE IF NOT EXISTS`
 5. Prisma schema-external columns → `$queryRawUnsafe` / `$executeRawUnsafe`
+6. Branch main: solo fix urgenti produzione — tutto il resto su develop
 
 ## Prossimi step
 1. SIAE raccomandata A/R
 2. Violetta go-live (post-SIAE): rimuovi noindex → GSC → Product Hunt / There's An AI For That / Futurepedia / BotList
-3. DPIA/FRIA: ✅ firmate 29/06, archiviate in admin/gdpr (download diretto PDF)
-4. TikTok: attendere review
+3. Pre go-live Violetta: Playwright E2E su develop (form preventivo, quiz, checkout, blog, admin login)
+4. Audit endpoint schedulati: multipreventivi, Fly&Drive, locations, social AI, WA/email AI, cortesia rientro, recensioni post-viaggio
+5. TikTok: attendere review
+6. 40 città service areas GBP
+7. Contatti LCP 11.3s: monitorare field data prima di intervenire
 
-## Sessione 30 Giugno 2026 — riepilogo (vedi docs/sessione-4go-30-giugno-2026.md per dettaglio)
-Mergiati su main: dedup WhatsApp atomico (race condition risolta), fix allucinazione "Claudio operatore" (bot riusava nome cliente come operatore inventato), mappa Duffel ampliata ~30 destinazioni mancanti, escalation WhatsApp completata su 3/3 percorsi, bug Prisma critico /api/preventivo risolto, cron inbox-organizer finalmente schedulato, 9 vulnerabilità sicurezza risolte (Next 15.5.18, CVE-2026-45109 middleware bypass), DPIA+FRIA+Registro Trattamento firmati archiviati, feature multi-tappa ManualBooking.itineraryCities.
-Restano su develop: tutto il flusso pubblico /violetta (inutile su main finché noindex attivo), E2E Playwright + CI settimanale, fix violetta-sub (FormFields React bug, PATCH crash pricePaid, auth ridondante rimossa), check coerenza piano violetta-sub↔ManualBooking.
+## Sessione 4GO-22 (30 Giugno 2026 — mattina)
+blog: normalizeImageUrl dedup foto duplicate, paginazione ~500 articoli, fix BgSlideshow isDark (chi-siamo 95, quando-viaggiare inizialmente non risolto), inbox-organizer schedulato correttamente (maxDuration+Vercel Cron), delete-all email protetto con conferma "ELIMINA"+ActivityLog, Playwright E2E su develop (form preventivo, quiz, blog, admin), bug reali trovati (shortDescription in /api/preventivo, heygen-weekly schema mancante), Actions minutes 90% consumati → workflows limitati.
+
+## Sessione 4GO-23 (30 Giugno 2026 — sera)
+Performance PSI mobile analizzata dopo nuovi score. Fix su main:
+- `/blog` featured image `priority` (97/2.3s)
+- `/quando-viaggiare` server-side fetch packages → `initialPackages` prop (89/2.1s)
+- Contatti TBT varianza PSI, non strutturale
+- Homepage 92/2.1s senza intervento (monitorare)
