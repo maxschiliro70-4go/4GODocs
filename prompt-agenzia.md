@@ -19,7 +19,7 @@ Branch: `main` (prod) / `develop` (staging: `staging.fourgo.it`, DB: `ep-sweet-r
 - Vapi: `maxschiliro70@gmail.com` | Assistant: `640e941e` | PAYG ~$0.11/min
 - Twilio: `+390250020031` attivo (bypassato Telnyx KYC)
 - GitHub token (giugno 2026): `[GITHUB_TOKEN — vedere Vercel env]`
-- Staging bot: `@FourGoTraveltestBot` token `8996155049:AAEybge6f7HP3ZjvJ397CcQQrXbyfFnENWc`
+- Staging bot: `@FourGoTraveltestBot` token `[TELEGRAM_BOT_TOKEN staging — vedere Vercel env]`
 
 ## Violetta™
 - Trademark UIBM n.302026000109033, 15/06/2026, classi 39+42
@@ -62,9 +62,11 @@ Branch: `main` (prod) / `develop` (staging: `staging.fourgo.it`, DB: `ep-sweet-r
 5. Prisma schema-external columns → `$queryRawUnsafe` / `$executeRawUnsafe`
 
 ## Prossimi step
-1. Test russo completo su staging
-2. Cherry-pick develop→main (autorizzazione Emi)
-3. SIAE raccomandata A/R
-4. DPIA/FRIA firma Massimo
-5. TikTok: attendere review
-6. Violetta go-live: rimuovi noindex → GSC → Product Hunt / There's An AI For That / Futurepedia / BotList
+1. SIAE raccomandata A/R
+2. Violetta go-live (post-SIAE): rimuovi noindex → GSC → Product Hunt / There's An AI For That / Futurepedia / BotList
+3. DPIA/FRIA: ✅ firmate 29/06, archiviate in admin/gdpr (download diretto PDF)
+4. TikTok: attendere review
+
+## Sessione 30 Giugno 2026 — riepilogo (vedi docs/sessione-4go-30-giugno-2026.md per dettaglio)
+Mergiati su main: dedup WhatsApp atomico (race condition risolta), fix allucinazione "Claudio operatore" (bot riusava nome cliente come operatore inventato), mappa Duffel ampliata ~30 destinazioni mancanti, escalation WhatsApp completata su 3/3 percorsi, bug Prisma critico /api/preventivo risolto, cron inbox-organizer finalmente schedulato, 9 vulnerabilità sicurezza risolte (Next 15.5.18, CVE-2026-45109 middleware bypass), DPIA+FRIA+Registro Trattamento firmati archiviati, feature multi-tappa ManualBooking.itineraryCities.
+Restano su develop: tutto il flusso pubblico /violetta (inutile su main finché noindex attivo), E2E Playwright + CI settimanale, fix violetta-sub (FormFields React bug, PATCH crash pricePaid, auth ridondante rimossa), check coerenza piano violetta-sub↔ManualBooking.
