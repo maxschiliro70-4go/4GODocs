@@ -99,14 +99,14 @@ Fix applicati in 4GO-23 (main):
    conflitti cherry-pick" sotto. Violetta go-live: rimuovi noindex → GSC →
    Product Hunt / There's An AI For That / Futurepedia / BotList
 3. ~~Pre go-live Violetta: Playwright E2E su develop~~ — COMPLETATO 4GO-22/23,
-   infrastruttura pronta (vedi sessione 4GO-25 sotto)
+   infrastruttura pronta (vedi sessione 4GO-24 sotto, parte pomeriggio/sera)
 4. Audit endpoint schedulati: multipreventivi, Fly&Drive, locations, social AI, WA/email AI, cortesia rientro, recensioni post-viaggio
 5. TikTok: attendere review
 6. 40 città service areas GBP
 7. Contatti LCP 11.3s: monitorare field data prima di intervenire
 
 ## Pattern risoluzione conflitti cherry-pick (per il prossimo massiccio, post-SIAE)
-Emersi durante il recupero di 35 commit in sessione 4GO-25 — riapplicabili:
+Emersi durante il recupero di 35 commit in sessione 4GO-24 — riapplicabili:
 - **develop ha già una versione più avanzata/refactorizzata** (es. `openEditBooking()`
   estratto invece di logica inline) → tenere HEAD, scartare la patch in arrivo se il
   fix è già coperto lì. Verificare SEMPRE cercando il campo/fix nella versione develop
@@ -179,7 +179,7 @@ il fix.
 - Fix stale-closure su handler tappe form edit (setEditForm(prev=>) invece
   di spread diretto — pattern ora coerente col form di creazione).
 
-## Sessione 4GO-25 (1 Luglio 2026 — pomeriggio/sera)
+## Sessione 4GO-24 (continua) — 1 Luglio 2026, pomeriggio/sera
 
 ### Firma email — scoperta critica e fix definitivo
 Tentativo iniziale: logo+icone social in base64 per bypassare il blocco Outlook
