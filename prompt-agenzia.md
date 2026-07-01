@@ -99,14 +99,14 @@ Fix applicati in 4GO-23 (main):
    conflitti cherry-pick" sotto. Violetta go-live: rimuovi noindex → GSC →
    Product Hunt / There's An AI For That / Futurepedia / BotList
 3. ~~Pre go-live Violetta: Playwright E2E su develop~~ — COMPLETATO 4GO-22/23,
-   infrastruttura pronta (vedi sessione 4GO-24 sotto, parte pomeriggio/sera)
+   infrastruttura pronta (vedi sessione 4GO-23, parte 1 luglio sotto)
 4. Audit endpoint schedulati: multipreventivi, Fly&Drive, locations, social AI, WA/email AI, cortesia rientro, recensioni post-viaggio
 5. TikTok: attendere review
 6. 40 città service areas GBP
 7. Contatti LCP 11.3s: monitorare field data prima di intervenire
 
 ## Pattern risoluzione conflitti cherry-pick (per il prossimo massiccio, post-SIAE)
-Emersi durante il recupero di 35 commit in sessione 4GO-24 — riapplicabili:
+Emersi durante il recupero di 35 commit in sessione 4GO-23 (1 luglio) — riapplicabili:
 - **develop ha già una versione più avanzata/refactorizzata** (es. `openEditBooking()`
   estratto invece di logica inline) → tenere HEAD, scartare la patch in arrivo se il
   fix è già coperto lì. Verificare SEMPRE cercando il campo/fix nella versione develop
@@ -138,7 +138,7 @@ Performance PSI mobile analizzata dopo nuovi score. Fix su main:
 - vercel.json: cron warmup automatico 05:55 ogni giorno
 - Warmup manuale eseguito post-deploy: 36/36 varianti in cache ✅
 
-## Sessione 4GO-24 (1 Luglio 2026)
+## Sessione 4GO-23 (continua — 1 Luglio 2026, pomeriggio)
 
 ### Bug critico risolto: tappe itinerario non mantenute dopo salvataggio
 Causa reale in **2 livelli separati** di `src/app/api/admin/bookings/route.ts`
@@ -179,7 +179,7 @@ il fix.
 - Fix stale-closure su handler tappe form edit (setEditForm(prev=>) invece
   di spread diretto — pattern ora coerente col form di creazione).
 
-## Sessione 4GO-24 (continua) — 1 Luglio 2026, pomeriggio/sera
+## Sessione 4GO-23 (continua — 1 Luglio 2026, sera)
 
 ### Firma email — scoperta critica e fix definitivo
 Tentativo iniziale: logo+icone social in base64 per bypassare il blocco Outlook
@@ -257,7 +257,7 @@ invia conferma reale via `emailFooter()`, pulisce (`e2e-cleanup`). Dispatch
 manuale libero di puntare a staging per test mirati.
 
 ### Bug tappe — sync develop↔main completata
-Il fix già documentato in 4GO-24 (2 livelli: SELECT SQL + trasformazione
+Il fix già documentato sopra (2 livelli: SELECT SQL + trasformazione
 `manuals.map()`) era solo su main. Verificato e confermato integro anche
 su develop durante il cherry-pick massiccio di questa sessione (35 commit,
 vedi "Pattern risoluzione conflitti" sopra).
