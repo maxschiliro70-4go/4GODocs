@@ -112,3 +112,44 @@ Performance PSI mobile analizzata dopo nuovi score. Fix su main:
 - preload mobile q=80→q=85
 - vercel.json: cron warmup automatico 05:55 ogni giorno
 - Warmup manuale eseguito post-deploy: 36/36 varianti in cache ✅
+
+## Sessione 4GO-24 (1 Luglio 2026)
+
+### Bug critico risolto: tappe itinerario non mantenute dopo salvataggio
+Causa reale in **2 livelli separati** di `src/app/api/admin/bookings/route.ts`
+(l'endpoint GET usato da load() per rileggere la lista booking):
+1. La query SQL raw con SELECT esplicita non includeva `mb."itineraryCities"`
+   (dimenticata quando il campo fu aggiunto al modello) — fix in a11e7c1
+2. Anche dopo il fix SQL, la funzione `manuals.map()` subito dopo ricostruisce
+   l'oggetto booking elencando ~24 campi uno per uno per la risposta JSON
+   finale — itineraryCities non era in quella lista neanche lì — fix in 3ae5c4a
+
+**Il salvataggio (PATCH) ha sempre funzionato correttamente** — il DB aveva
+sempre i dati giusti. Il bug era interamente nel percorso di lettura/reload.
+
+**Lezione permanente**: ogni nuova colonna aggiunta a ManualBooking (o
+qualsiasi modello) va verificata in TUTTI questi punti, non solo nel
+migrate endpoint:
+1. `ALTER TABLE IF NOT EXISTS` nel migrate endpoint (già noto)
+2. Ogni query SQL raw con SELECT esplicita che legge quella tabella
+3. Ogni trasformazione/mapping JS che ricostruisce l'oggetto per la risposta API
+   (spesso fatto per fondere dati da più tabelle, es. payments + manuals)
+
+Metodo di diagnosi che ha funzionato: log end-to-end in sequenza (payload
+inviato → risposta PATCH → risposta grezza GET → oggetto finale nel
+frontend) per isolare ESATTAMENTE in quale passaggio il dato si perde,
+invece di ipotizzare. Rimuovere sempre i log di debug una volta confermato
+il fix.
+
+### Altri fix sessione
+- Firme email (`fourgo.it/firme-email`): logo+social incorporati come
+  base64 (Outlook blocca download immagini remote di default — base64
+  bypassa il blocco). Icone social da Simple Icons (CC0, no attribuzione,
+  loghi ufficiali). Layout: contatti → riga rossa → logo → social sotto.
+- Login (`/login`): campo TOTP ora dentro un `<form>` vero (era `<div>` +
+  onClick/onKeyDown manuale) — eliminato warning Chrome password-fuori-form.
+- Brand rietichettato ovunque: 4GO FourTravel/4Travel → FOURGO/4TRAVEL
+  (prenotazioni-manuali + multi-hotel), value DB invariati.
+- Importo/Diritti agenzia/50-50 ora condizionati a bookingStatus==='ARCHIVIATA'.
+- Fix stale-closure su handler tappe form edit (setEditForm(prev=>) invece
+  di spread diretto — pattern ora coerente col form di creazione).
