@@ -105,3 +105,10 @@ Performance PSI mobile analizzata dopo nuovi score. Fix su main:
 - `/quando-viaggiare` server-side fetch packages → `initialPackages` prop (89/2.1s)
 - Contatti TBT varianza PSI, non strutturale
 - Homepage 92/2.1s senza intervento (monitorare)
+
+## Fix aggiuntivi 4GO-23 (push 34969d2)
+- warmup-images: 3→18 immagini, q=80→q=85 (allineato HeroSection quality=85 LCP)
+- getPackagesFromDB revalidate 5→300s
+- preload mobile q=80→q=85
+- vercel.json: cron warmup automatico 05:55 ogni giorno
+- Warmup manuale eseguito post-deploy: 36/36 varianti in cache ✅
