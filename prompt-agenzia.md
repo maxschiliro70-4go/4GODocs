@@ -17,7 +17,7 @@ Branch: `main` (prod) / `develop` (staging: `staging.fourgo.it`, DB: `ep-sweet-r
 ## Account chiave
 - `MIGRATE_SECRET=4go2026` | Admin: `/admin` (NextAuth + MFA TOTP)
 - Vapi: `maxschiliro70@gmail.com` | Assistant: `640e941e` | PAYG ~$0.11/min
-- Twilio: `+390250020031` attivo (bypassato Telnyx KYC)
+- Twilio: `+390250020031` attivo
 - GitHub token (giugno 2026): `[GITHUB_TOKEN — vedere Vercel env]`
 - Staging bot: `@FourGoTraveltestBot` token `[TELEGRAM_BOT_TOKEN staging — vedere Vercel env]`
 
@@ -269,3 +269,166 @@ modifica (main per hotfix non-webhook, develop per webhook/auth/pagamenti/schema
 NESSUNA sincronizzazione automatica ad ogni commit. Il riallineamento completo
 si fa un'unica volta, tutto insieme, alla conferma SIAE — esplicitamente
 autorizzato da Emi prima di procedere.
+
+## Sessione 4GO-23 (continua) — 2 Luglio 2026
+
+### LCP homepage risolto: root cause reale trovata (non più ipotesi)
+Field data Vercel Speed Insights mostrava LCP 7.59s stabile su `/` mobile,
+sempre sull'elemento hero `<img>`. Diagnosi con WebPageTest (Milan, mobile
+393px, throttling 3G) invece di continuare a ipotizzare: waterfall mostra
+l'immagine LCP da **468KB** (AVIF w=1920 q=85) — su un viewport di 393px.
+
+Causa: `sizes="(max-width: 828px) 828px, 1920px"` in `HeroSection.tsx`
+dichiara una larghezza **fissa**, non relativa al viewport — ma la sezione
+hero è sempre `w-full` (100% viewport, mai un box vincolato). Su mobile ad
+alta densità (DPR 2x/3x), il browser calcola 828×DPR e sceglie sempre la
+variante più pesante disponibile in `deviceSizes` (1920w), anche su schermi
+stretti. Fix: `sizes="100vw"` — lascia scegliere il breakpoint più vicino al
+viewport reale × DPR. Zero impatto visivo (sizes non tocca mai il rendering,
+solo quale file scaricare). Allineato anche il preload esplicito in
+`page.tsx`: da 2 varianti (828w/1920w) a tutte le 6 di `deviceSizes`, per
+evitare mismatch tra ciò che il preload scalda e ciò che il tag reale
+richiede.
+
+### Trilogia TDZ "Cannot access X before initialization" — causa reale trovata
+Cliente reale, query banale ("cosa mettere in valigia"), bot silenzioso —
+zero risposta, cliente costretto a rifare `/start`. Log Vercel:
+`ReferenceError: Cannot access 'an' before initialization`, stack minificato
+inutile senza sourcemap (non recuperabili né da Vercel dashboard né da build
+locale, bloccata dagli stessi limiti di rete già noti — `binaries.prisma.sh`
+non whitelisted).
+
+**Primo tentativo (sbagliato)**: consolidamento dei 18 `import('@/lib/db')`
+dinamici sparsi nel webhook in un singolo import statico — ipotesi plausibile
+(stesso pattern del bug di 4GO-19, maggio) ma **non era la causa reale**:
+stesso identico errore riprodotto dopo il deploy.
+
+**Metodo che ha funzionato**: installato ESLint temporaneamente (`--no-save`,
+mai in package.json) con solo la regola `@typescript-eslint/no-use-before-define`
+attiva, lanciata sul singolo file. Ha trovato con certezza **16 violazioni
+reali**, non ipotesi:
+- `effectiveDest` (dentro `getAIResponse`): dichiarata riga 1089, usata già
+  a riga 1036 — dentro TUTTO il ramo `isFactualQuery`/`isCurrencyQuery`/ecc,
+  esattamente quello di "cosa mettere in valigia". Fix: dichiarazione
+  spostata subito dopo `destination`, 53 righe più in alto.
+- `history`/`session` nel blocco FOTO (audioguida da immagine — funzionalità
+  reale di Violetta): entrambe dichiarate molto più avanti in POST, ma quel
+  blocco gira prima. Bonus: `session.destination` non esiste nemmeno sullo
+  schema Prisma di `TelegramSession` (solo `bookingCode`) — era sempre
+  `undefined` a prescindere dal TDZ. Fix: riusa una query già presente poco
+  sopra nello stesso blocco (`sessionPhoto`/`photoDestination`, con la vera
+  destination via JOIN su `ManualBooking`) invece di crearne una duplicata.
+- `history` nel blocco AUDIOGUIDA VIA TESTO: qui `session` era già
+  disponibile, solo `history` mancava — costruita localmente da
+  `session.context`, usata per il contesto conversazionale reale della
+  chiamata AI (non solo logging).
+
+Verificato a 0 problemi con ESLint prima di ogni commit. **Metodo da riusare**
+se ricapita altrove in questo file (4500+ righe, il punto più fragile del
+sistema per questo tipo di bug) — molto più efficace della caccia manuale a
+tappeto fatta nei tentativi precedenti.
+
+**Bug collaterale trovato durante il refactor**: cherry-pick del fix TDZ da
+develop a main ha introdotto una query duplicata (main non aveva ancora il
+consolidamento import di prima, quindi aveva già una query equivalente più
+completa nello stesso blocco). Corretto con un secondo commit di pulizia,
+stesso fix applicato a entrambi i branch.
+
+**Regressione auto-inflitta**: durante l'aggiunta della notifica Telegram
+sul blocco token GBP (vedi sotto), una `str_replace` ha eliminato per
+distrazione `const dryRun = ...` — TS check "pulito" subito dopo, ma falso
+negativo da cache incrementale (`tsconfig.tsbuildinfo` scartato da git ma
+non eliminato fisicamente tra check consecutivi sullo stesso file). Lezione:
+**eliminare fisicamente la cache prima di check critici dopo modifiche
+rapide in sequenza sullo stesso file**, non solo scartarla da git dopo.
+
+### Ricerca interprete Violetta Concierge — pattern lingua già esistente
+Partito da una domanda su MX→spagnolo per l'interprete WebRTC Concierge.
+`interpreteAttivo` è solo un flag booleano su `ManualBooking`, nessuna logica
+di chiamata collegata — confermato con ricerca sistematica (`vapi-utils.ts`
+è codice completamente orfano, mai importato da nessun file).
+
+Il pattern reale, collaudato, vive in **`src/lib/restaurant-flow.ts`**
+(usato dal flusso "prenota tavolo ristorante" via Vapi, già in produzione):
+```
+countryCode (da ManualBooking) → COUNTRY_LANGUAGE[cc] → nome lingua italiano
+  → LANG_TO_ISO[nome] → codice ISO
+  → transcriber esplicito: NOVA3_SUPPORTED.has(langCode)
+        ? { provider:'deepgram', model:'nova-3', language: langCode }
+        : { provider:'deepgram', model:'nova-3', language:'multi' }
+```
+`COUNTRY_LANGUAGE['MX'] = 'spagnolo'` confermato. `firstMessage` generato al
+volo con Claude Haiku, direttamente nella lingua del ristorante. `LANG_TO_ISO`
+è definita **inline dentro il webhook** (non esportata da `restaurant-flow.ts`)
+— da estrarre in un punto condiviso se si replica per l'interprete Concierge.
+Piano selezionabile in `prenotazioni-manuali`: il radio Concierge accende
+`interpreteAttivo` automaticamente, più un toggle manuale indipendente
+(operatore può "regalarlo" su altri piani, o disattivarlo pur restando
+Concierge).
+
+### gbp-post fermo da 2 giorni — OAuth refresh token silenzioso
+`refreshGbpToken()` non controllava mai `res.ok` né il body errore di Google
+— ritornava sempre `null` a prescindere dalla causa reale (refresh token
+assente vs rifiutato da Google — `invalid_grant`, comune con OAuth consent
+screen in modalità "Testing": Google limita i refresh token a **7 giorni**
+in quel caso, indipendentemente dall'uso. Da verificare su Google Cloud
+Console se la consent screen di GBP è ancora in Testing — se sì, ricapiterà
+ogni settimana finché non viene pubblicata/verificata).
+
+Fix: `getValidToken`/`refreshGbpToken` ora ritornano `{token, error}` con
+il messaggio Google reale, propagato sia nella risposta HTTP sia in una
+notifica Telegram (mancante fino ad oggi su questo specifico fallimento —
+per questo il cron ha fallito 2 giorni senza che nessuno se ne accorgesse,
+nonostante esistesse già notifica su successo/fallimento della
+*pubblicazione* vera). Ricollegato manualmente da Emi, funziona di nuovo.
+
+### Secondo incidente Aruba SMTP nello stesso weekend — causa diversa
+Non collegato al blocco mailbox di ieri (525 5.7.13, risolto). Oggi:
+`550 5.1.0 <info@fourgo.it> Connessione da 13.38.72.136 temporaneamente
+rifiutata` — blocco a livello di **IP sorgente**, cade già su `MAIL FROM`.
+Ricerca web ha confermato lo stesso pattern documentato altrove (utenti
+Outlook.com con connected-accounts verso Aruba, stesso messaggio esatto con
+IP Azure diverso) — Aruba applica blocchi IP-based contro provider cloud,
+non solo blocchi account-based.
+
+**Ma la cronologia non torna con un blocco strutturale permanente**: zero
+incidenti da aprile fino a ieri, poi due in due giorni consecutivi — lettura
+più coerente: conseguenza a cascata dell'incidente di ieri (sistemi Aruba
+più aggressivi nello scrutinare le connessioni della stessa casella/dominio
+per un periodo dopo un incidente antispam), non un problema strutturale
+sempre-presente contro IP AWS/Vercel. Si è risolto da solo in poche ore,
+confermato con `smtp-check`. Ticket Aruba aggiornato chiedendo conferma se
+i due episodi sono collegati.
+
+### resend-confirm — notifica errore + WhatsApp cliente
+Due lacune emerse durante il recupero del cliente `4GO-2026-KQLC1` (email
+di conferma fallita per il blocco IP sopra, mai notata perché nessun alert
+visibile — causa non confermata con certezza, singolo episodio non
+riprodotto):
+1. Nessuna notifica Telegram su fallimento invio — solo `console.error`
+   server-side + risposta HTTP dipendente dall'`alert()` browser. Aggiunto
+   `notifyAll()` esplicito con il messaggio d'errore reale incluso (non
+   serve più controllare i log Vercel per il testo dell'errore).
+2. `sendClientNotification()` (WA+Telegram+email interna, già esistente e
+   usata per preventivo/location/trasporto/multi-hotel/fly) non era mai
+   chiamata da `resend-confirm` — cliente con telefono registrato non
+   riceveva WhatsApp. Aggiunto `'confirm'` come sesto `docType`, chiamata
+   dopo un invio riuscito. Entrambe le notifiche saltate quando `useCI=true`
+   (test automatico settimanale), per non generare rumore sul booking
+   fittizio di test.
+
+### Metodo di lavoro consolidato in questa sessione
+- **ESLint `no-use-before-define`** (installazione temporanea, mai in
+  package.json) per diagnosi TDZ certa invece di ricerca manuale a tappeto
+  — riusare su questo file se ricapita.
+- **WebPageTest** (location Milan, mobile, throttling reale) per waterfall
+  LCP concrete quando i tool interni (Chrome remote debug via USB) falliscono
+  per attrito di setup — nessuna registrazione richiesta, dati sufficienti
+  per diagnosi definitiva.
+- **Eliminare fisicamente `tsconfig.tsbuildinfo`** prima di TS check critici
+  dopo modifiche rapide in sequenza sullo stesso file — la cache incrementale
+  può dare falsi negativi.
+- Verificare sempre `res.ok` + il body errore reale nelle chiamate OAuth/API
+  esterne prima di collassare tutto in `return null` — pattern ripetuto
+  (Aruba SMTP, Google OAuth refresh) che nasconde la causa reale dietro un
+  errore generico.
