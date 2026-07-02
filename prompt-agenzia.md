@@ -488,3 +488,38 @@ diretto e immediato — stesso tipo di eccezione urgente già usata oggi per il
 silenzio email cliente reale. Il fix protegge le conversazioni future, non
 recupera automaticamente Claudio — serve un contatto manuale su quel caso
 specifico, ancora da fare.
+
+### Template WhatsApp "notifica_nuova_richiesta" — attivo, risolve la finestra 24h
+Causa più profonda del fallimento silenzioso trovato con l'escalation di Claudio:
+qualsiasi notifica **proattiva** a Massimo (il sistema scrive per primo, non
+risponde a un suo messaggio) via testo libero è soggetta alla finestra delle
+24 ore di WhatsApp Business — fuori da quella finestra l'API accetta la
+richiesta (200, ID messaggio valido) ma non consegna mai, senza nessun errore.
+`operatorNumbers.includes(from) → continue` nel webhook scarta il messaggio
+solo a livello applicativo nostro (Violetta non risponde a un operatore); la
+finestra Meta si basa sulla ricezione lato loro, non su questo — verificato
+non essere la causa del problema.
+
+Creato e approvato template Meta **"notifica_nuova_richiesta"** (categoria
+Utility, parametri **nominati** non posizionali — `{{nome_cliente}}`
+`{{contatto}}` `{{richiesta}}`, scelta deliberata: i nominati matchano per
+nome invece che per ordine nell'array, evitando lo stesso tipo di bug di
+disallineamento silenzioso trovato più volte oggi se il template viene mai
+riordinato). Periodo di validità esteso oltre il default di 10 minuti
+(altrimenti stesso problema di scadenza silenziosa, spostato ma non risolto).
+Zero pulsanti/CTA — solo testo informativo, per restare in categoria Utility
+e non rischiare riclassificazione automatica a Marketing (Meta la applica
+retroattivamente dal 9 aprile 2025).
+
+Nuova funzione condivisa `sendWAOperatorTemplate()` in `src/lib/waTemplate.ts`,
+sostituisce il testo libero in **3 punti** (non 4 come inizialmente previsto —
+il quarto, "limite 30 messaggi raggiunto", è stato scartato: quel caso non è
+una "nuova richiesta cliente", il contenuto non calzava col template dichiarato
+a Meta, resta solo su Telegram+email come prima):
+1. `contact/route.ts` — form contatti sito (contatto = email, o "email · telefono" se presente)
+2. `whatsapp/webhook` — trigger esplicito "operatore"/"consulente"
+3. `whatsapp/webhook` — escalation AI (`aiData.escalate`)
+
+Portato su main, template approvato da Meta più rapidamente del previsto —
+attivo e funzionante, non solo teoricamente pronto per quando arriverà
+l'approvazione.
