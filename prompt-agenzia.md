@@ -432,3 +432,24 @@ riprodotto):
   esterne prima di collassare tutto in `return null` — pattern ripetuto
   (Aruba SMTP, Google OAuth refresh) che nasconde la causa reale dietro un
   errore generico.
+
+### gbp-post — risolto in modo definitivo (non più workaround settimanale)
+Causa confermata: OAuth consent screen del progetto Google Cloud (`go-maps-491010`,
+client ID `341870753269-d1l2pmh7ngf71uvkncbpnnf4uv0ao0a4`) era in stato **Testing**
+— Google limita i refresh token a 7 giorni fissi in quello stato, indipendentemente
+dall'uso, anche con utenti già whitelistati come test user (2/100: emiliano.marchesi@,
+maxschiliro70@).
+
+Verificato che lo scope `https://www.googleapis.com/auth/business.manage` è
+**non sensibile** (nessuna icona lucchetto nella lista "Aggiungi o rimuovi ambiti"
+— quell'icona è l'indicatore ufficiale Google per sensitive/restricted). Con solo
+scope non sensibili, il passaggio da Testing a **In produzione** non richiede
+nessuna revisione Google: dichiarato lo scope in Accesso ai dati → Save, poi
+Pubblico → Publish App → conferma immediata, nessuna coda di verifica.
+
+Da questo momento il refresh token non ha più il limite dei 7 giorni — dura fino
+a revoca esplicita, cambio password Google, o 6 mesi di inattività (limiti
+standard). Il ricollegamento manuale settimanale non dovrebbe più servire.
+Test naturale: il cron di lunedì prossimo (07:00 UTC) — se il token regge,
+il problema è chiuso per davvero, altrimenti arriva comunque la notifica
+Telegram con l'errore reale (fix di oggi) invece del silenzio precedente.
