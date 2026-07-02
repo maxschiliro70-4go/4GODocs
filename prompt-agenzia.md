@@ -453,3 +453,38 @@ standard). Il ricollegamento manuale settimanale non dovrebbe più servire.
 Test naturale: il cron di lunedì prossimo (07:00 UTC) — se il token regge,
 il problema è chiuso per davvero, altrimenti arriva comunque la notifica
 Telegram con l'errore reale (fix di oggi) invece del silenzio precedente.
+
+### WhatsApp escalation — bug reale scoperto con cliente vero, fix su main
+Cliente reale (Claudio, preventivo Sharm el-Sheikh già esistente — Reefoasis/
+Jaz Fanara, 25 dic-2 gen, 3 persone, 3.800€) scrive lamentando di non essere
+stato ricontattato. Il bot risponde promettendo "ora lo faccio subito, un
+consulente ti raggiungerà a breve" — ma nessuna escalation reale è partita.
+Confermato sui log Vercel: nessuna chiamata a `api.telegram.org` nell'invocazione
+`/api/whatsapp/webhook` di quel turno, nessun log `[ESCALATION]`.
+
+**Causa**: `escalate` non è un campo JSON strutturato — è un pattern testuale
+(`ESCALATE: motivo` come prima riga della risposta grezza di Claude, letto via
+regex in `/api/whatsapp/ai`). Le istruzioni esistenti coprivano solo 3 casi
+stretti: emergenza reale, richiesta di un **nuovo** preventivo complesso,
+qualificazione **appena completata in questo turno**. Il caso di Claudio non
+rientrava in nessuno dei tre (info già note da prima, non "una richiesta nuova"
+né "appena qualificata ora") — Claude ha correttamente capito che non c'era
+match letterale, quindi non ha scritto `ESCALATE:`, ma ha comunque generato
+testo che semanticamente promette un passaggio umano. Testo e azione disallineati.
+
+**Fix** (principio generale, non un quarto caso aggiunto alla lista): il bot non
+può gestire pagamenti né confermare prenotazioni, quindi ogni volta che il
+contesto ha destinazione+periodo+budget (anche da scambi precedenti, non
+necessariamente in questo turno) E il cliente esprime in qualunque forma
+volontà di procedere/essere ricontattato → sempre urgente da scalare,
+indipendentemente da come è formulata la richiesta. In caso di dubbio con
+qualifica commerciale completa, scala sempre — WhatsApp è il canale più
+commerciale, l'obiettivo esplicito è non perdere clienti per un pattern troppo
+stretto nelle istruzioni (rischio reale: recensione negativa nel migliore dei
+casi, vendita persa a un concorrente nel peggiore).
+
+Portato **subito su main** (non atteso il batch SIAE) per l'impatto commerciale
+diretto e immediato — stesso tipo di eccezione urgente già usata oggi per il
+silenzio email cliente reale. Il fix protegge le conversazioni future, non
+recupera automaticamente Claudio — serve un contatto manuale su quel caso
+specifico, ancora da fare.
