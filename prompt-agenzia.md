@@ -523,3 +523,166 @@ a Meta, resta solo su Telegram+email come prima):
 Portato su main, template approvato da Meta più rapidamente del previsto —
 attivo e funzionante, non solo teoricamente pronto per quando arriverà
 l'approvazione.
+
+---
+
+## Sessione 3 luglio 2026 (pomeriggio/sera) — SEO, email, WhatsApp cliente, newsletter
+
+### Secondo template WhatsApp — lato clienti
+Scoperto che le notifiche WA ai **clienti** (preventivo/location/trasporto/multi-hotel/fly/confirm,
+via `sendClientNotification()`) avevano lo stesso problema di finestra 24h già risolto ieri
+solo lato operatori — testo libero, silenziosamente non consegnato se il cliente non aveva
+scritto di recente al numero business (es. preventivo nato da form/telefonata, mai da chat WA).
+
+Creato secondo template Meta **"notifica_documento_cliente"** (Utility, 3 variabili nominate:
+`nome_cliente`, `oggetto`, `link` — `oggetto` unisce label+destinazione già composti lato
+codice, dato che i template non supportano variabili condizionalmente vuote). Header immagine
+fissa (`logo-4go-fb.png`, caricato da Emi, trasparente, salvato nel repo per URL stabile).
+Un solo template copre tutti e 6 i docType, dato che la struttura del messaggio è identica in
+tutti i casi. Approvato e integrato in `sendClientNotification.ts`.
+
+### Loghi email — sfondo nero → trasparente
+`logo-4go-hd.png` aveva sfondo nero incorporato nel file stesso (RGB, no alpha) — non un CSS,
+il file. Sostituito con `logo-4go-transparent.png` (vero RGBA) in `contact/route.ts` ed
+`emailFooter()`. Due trattamenti diversi per contesto diverso (testati visivamente prima di
+applicare): su header con gradiente rosso/blu il trasparente puro si mimetizza quasi del tutto
+(stessi colori del logo e dello sfondo) — aggiunto un box nero semi-trasparente arrotondato
+(`rgba(0,0,0,0.55)`, radius 8px, variante "D" tra 6 alternative testate) dietro al logo. Su
+sfondo bianco (firma email standard) il trasparente puro basta, nessun box necessario. Stessa
+soluzione applicata anche al logo header della newsletter (stesso gradiente, stesso problema).
+
+### Newsletter — allineamento e miglioramenti
+- Handle social disallineati tra `emailFooter()` (corretti, `@4go_fourtravel`) e il template
+  newsletter (vecchi, `@4fourtravelagency`) — allineati tutti e 6 (incluso WhatsApp, mancante
+  in emailFooter, aggiunto con logo ufficiale scaricato da Simple Icons via GitHub — dominio
+  whitelisted — e composto su cerchio verde con cairosvg+PIL)
+- Logo header ingrandito (60px→90px→108px, +80% totale)
+- Icone social: da box colorati testuali a PNG reali (stesse immagini di emailFooter)
+- Libreria immagini: rimosso limite artificiale di 20, aggiunta scroll dopo 9 (3 righe) invece
+  di espandere la pagina indefinitamente
+- Bottoni extra: nuova posizione "Nel testo" con placeholder `[BTN N]` (stesso pattern già
+  esistente per `[CTA]` e `[FOTO N]`), esclusi da top/bottom quando impostati inline
+
+### Indagine SEO — 113 articoli "rilevati ma non indicizzati"
+Report Search Console: 130 URL (113 blog, 9 city-page, 6 pacchetti, 3 statiche) mai scansionati
+da Google (`1970-01-01` = placeholder "mai scansionato", non una data reale).
+
+**Causa identificata**: `blog-autogen` pubblicava **10 articoli/giorno** (~300/mese) — volume
+troppo alto rispetto al crawl budget che Google dedica al dominio. Confermato con dati reali
+via nuovo sistema `index-check` (vedi sotto): batch a offset 0-100 (articoli recenti) mostravano
+88-96% non indicizzato, batch a offset 200-400 (articoli di mesi fa) mostravano 96% **indicizzato**
+— conferma netta che è un problema di volume/tempo, non di qualità/struttura dei contenuti.
+
+**Falsa pista scartata**: l'Indexing API di Google (già in uso via cron `index-google`, ogni ora)
+NON aiuta per contenuto blog — è ufficialmente limitata a JobPosting/BroadcastEvent, policy
+chiarita da Google a maggio 2025. Il cron "funziona" (risposta 200, notifica "✅ Inviate: N")
+ma Google ignora silenziosamente le richieste fuori scope — il messaggio Telegram diceva
+letteralmente "Inviate", mai "Indicizzate", distinzione persa nel tempo. Cron lasciato attivo
+(non fa danno) ma non risolve nulla per il blog.
+
+**Due alert GSC risultati falsi allarmi, verificati e chiusi**:
+- Redirect error su un URL blog specifico → `curl -IL` mostra 308→200 OK, catena funzionante,
+  alert probabilmente riferito a uno stato precedente già risolto
+- "Bloccata da robots.txt" → tutti i 33 URL nel report sono asset CSS interni Next.js
+  (`/_next/static/`), bloccati **intenzionalmente e correttamente**, zero relazione col blog
+
+**Azioni concrete**:
+1. `blog-autogen`: quota giornaliera ridotta da 10 a **3** articoli/giorno (countdown nel DB
+   `blogCronMax`, non moltiplicato da nessuna sessione — era già così prima, mai "per sessione
+   ×10" come la UI assumeva). Vercel Cron ridotto da 10 a 3 trigger (06:00/06:20/06:40 UTC).
+   `blog-settings` (pagina admin) e `blog-check` (valore "consigliato") erano disallineati dal
+   vero modello di calcolo — corretti entrambi, coerenti col nuovo valore.
+2. **Nuovo sistema di monitoraggio**: `src/app/api/cron/index-check/route.ts` — usa la Search
+   Console **URL Inspection API** (`urlInspection.index:inspect`, diversa dall'Indexing API:
+   supportata ufficialmente per qualsiasi contenuto, non solo JobPosting/BroadcastEvent, 2000
+   controlli/giorno gratis). Riusa lo stesso service account già configurato per l'Indexing API
+   (`GOOGLE_INDEXING_SA_JSON`, nuova funzione condivisa `src/lib/googleServiceAuth.ts`
+   parametrizzata per scope), ma richiede un permesso separato: il service account va aggiunto
+   come utente nella proprietà Search Console (Impostazioni → Utenti e permessi) — permesso
+   fisico sulla proprietà, indipendente dallo scope OAuth. Formato proprietà GSC confermato
+   `sc-domain:fourgo.it` (proprietà di tipo dominio, non URL-prefix — trovato riusando lo stesso
+   formato già in uso in `gsc-report/route.ts`).
+   - **Modalità `?all=1`**: fotografa tutto il pregresso (636 articoli), paginato (`offset`/
+     `limit`, default 25 — 100 andava già in timeout) per restare sotto i 300s di maxDuration
+   - **Modalità default**: controlla solo articoli pubblicati 14-21 giorni prima, notifica solo
+     se il tasso di non-indicizzati supera 30% — intercetta il prossimo problema entro 2-3
+     settimane invece di mesi. Cron settimanale, lunedì 07:45 UTC
+   - Notifica raggruppa i non-indicizzati per `articleType`, per capire a colpo d'occhio se il
+     problema è concentrato su un tipo specifico
+   - **Nota per l'interpretazione dei risultati**: gli stati `coverageState` intermedi
+     ("Discovered - currently not indexed" vs "URL is unknown to Google") si sono dimostrati
+     **instabili** — lo stesso URL può mostrare l'uno o l'altro tra due chiamate a distanza di
+     minuti. Solo il flag binario indicizzato/non-indicizzato è affidabile come segnale. Lo
+     stato "Crawled - currently not indexed" (diverso — Google ha scansionato e scelto di non
+     indicizzare) si è invece dimostrato **stabile** su ripetizione, quindi è un segnale reale;
+     trovato su un piccolo gruppo di articoli più vecchi (alcuni `articleType: null`, non
+     generati dal sistema automatico) — da approfondire separatamente, non urgente.
+
+### Bounce-check — rilevamento mancato recapito email
+Scoperto con un caso reale (Cristina Orsatti, hotmail.it, prenotazione 4GO-2026-KQLC1):
+`smtp.sendMail()` risolve con successo quando Aruba **accetta** il messaggio per l'inoltro,
+non quando arriva davvero a destinazione. Il vero fallimento (in questo caso: 24h di tentativi
+falliti da parte di Aruba nel raggiungere il server Microsoft, nessun codice SMTP specifico,
+solo "non è stato possibile contattare il server destinatario") arriva dopo, in modo asincrono,
+come email DSN/NDR — invisibile al codice che ha fatto l'invio originale. Verificato con
+mail-tester.com (9.5/10, SPF/DKIM/DMARC tutti PASS, zero blocklist) che l'infrastruttura di
+invio è sana — il problema è specifico alla connessione verso quel destinatario in quel momento,
+non un problema strutturale di reputazione/autenticazione.
+
+Nuovo cron `src/app/api/cron/bounce-check/route.ts` (4×/giorno, 08/12/16/20 UTC) — legge INBOX
+di `info@fourgo.it` via IMAP (riusa `IMAP_CONFIG` e pattern già in uso in `email-ai/poll`),
+riconosce i veri DSN (RFC 3464: `content-type multipart/report;report-type=delivery-status`,
+o mittente/oggetto tipici mailer-daemon/postmaster/Undeliverable), estrae con regex il
+destinatario fallito (`Final-Recipient`), il booking collegato se recuperabile (pattern
+`4GO-YYYY-XXXXX` nel testo) e il motivo. Notifica tutti gli operatori via Telegram, sposta
+l'email in `INBOX.4GO.Bounce` per non rielaborarla. **Da verificare**: se serve anche la
+registrazione su cron-job.org oltre a Vercel Cron, coerente con la regola dei cron doppi.
+
+### Altri fix minori
+- `selezione-viaggio/page.tsx`: unica pagina cliente pubblica scritta interamente con colori
+  hardcoded (`background: '#0a0a1a'` ecc.), zero integrazione col sistema tema chiaro/scuro del
+  sito — sempre dark indipendentemente dalla scelta utente. Verificato che il problema è isolato
+  a questa pagina (le altre pagine cliente simili, `location`/`trasporto`, sono già ben integrate
+  con `var(--...)`). Sostituiti sistematicamente sfondi/bordi/testo con le variabili tema,
+  lasciati fissi i colori semantici (badge stagione, verde selezione, rosso prezzo brand) e il
+  testo bianco su sfondi sempre scuri (foto, bottoni, header gradiente)
+- Biglietto da visita digitale generato via Gamma per la figlia di Inga (modella, passaparola
+  in Sardegna estate) — contatto sito in primo piano, impersonale (non nominativo). QR code
+  generato localmente (libreria `qrcode` Python, colori brand) e verificato funzionante
+  (decodificato e testato prima di consegnarlo)
+
+### Non fatto — in sospeso
+- **Sistema voucher recensioni** (€50 per chi lascia una recensione Google): design completo
+  discusso e approvato (mockup email pronto, stile "biglietto" con perforazione), ma **non
+  implementato** su richiesta esplicita — si riprende quando deciso. Schema: verifica non per
+  matching nome (inaffidabile) ma per autodichiarazione nel canale esistente + controllo
+  temporale incrociato con recensioni Google reali importate (`gbp-import-reviews`); per
+  recensioni spontanee, il prompt di `gbp-reply-reviews` andrebbe esteso con invito a
+  contattarci in privato. Modello DB `Voucher`, generatore codice, e la logica di verifica
+  restano da costruire.
+- **Differenziazione contenuti blog-autogen**: discusso un possibile secondo passaggio AI
+  (Haiku, solo per scegliere angolo/apertura tra opzioni date — mai per inventare fatti, per
+  evitare il rischio di allucinazione) prima della scrittura vera (Sonnet), per ridurre la
+  somiglianza strutturale tra i 660 articoli generati sui 16 template fissi. Non implementato
+  — i dati raccolti oggi (indicizzazione quasi perfetta sugli articoli vecchi) suggeriscono che
+  il volume fosse la causa dominante, non la struttura — da rivalutare se il problema persiste
+  dopo che la riduzione a 3/giorno avrà avuto tempo di agire.
+- **develop vs main**: divergenza strutturale ampia (156 commit solo-develop, 300+ solo-main,
+  con pattern di cherry-pick paralleli passati che hanno creato hash duplicati per lo stesso
+  contenuto su entrambi i lati). Deciso di non sincronizzare ora — resta così fino alla
+  conferma SIAE, poi cherry-pick mirato del necessario per il go-live Violetta, non una sync
+  completa.
+
+## File chiave aggiunti/modificati oggi
+
+| File | Modifica |
+|------|----------|
+| `src/lib/waTemplate.ts` → esteso, `src/lib/sendClientNotification.ts` | Template WA clienti |
+| `src/lib/emailSignature.ts`, `src/app/api/contact/route.ts` | Logo trasparente + box smerigliato |
+| `src/app/(admin)/admin/newsletter/page.tsx` | Handle social, logo, icone reali, scroll libreria, bottoni inline |
+| `public/social/whatsapp.png`, `public/logo-4go-fb.png` | Nuovi asset logo |
+| `src/app/api/cron/blog-autogen/route.ts`, `vercel.json` | Quota 10→3 |
+| `src/app/(admin)/admin/blog-settings/page.tsx`, `src/app/api/cron/blog-check/route.ts` | UI allineata al nuovo modello |
+| `src/lib/googleServiceAuth.ts`, `src/app/api/cron/index-check/route.ts` | Monitoraggio indicizzazione (nuovo) |
+| `src/app/api/cron/bounce-check/route.ts` | Rilevamento mancato recapito (nuovo) |
+| `src/app/(public)/selezione-viaggio/page.tsx` | Fix tema chiaro/scuro |
