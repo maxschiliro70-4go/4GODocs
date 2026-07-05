@@ -686,3 +686,11 @@ registrazione su cron-job.org oltre a Vercel Cron, coerente con la regola dei cr
 | `src/lib/googleServiceAuth.ts`, `src/app/api/cron/index-check/route.ts` | Monitoraggio indicizzazione (nuovo) |
 | `src/app/api/cron/bounce-check/route.ts` | Rilevamento mancato recapito (nuovo) |
 | `src/app/(public)/selezione-viaggio/page.tsx` | Fix tema chiaro/scuro |
+
+---
+
+## Tracking GSC giornaliero
+Emi incolla ogni giorno il report automatico Search Console — storico e criteri di
+lettura in `docs/gsc-tracking.md` (file separato, aggiornato quotidianamente).
+Consultarlo prima di commentare un nuovo report, per confrontare con i giorni precedenti
+invece di giudicare un singolo giorno isolato.
