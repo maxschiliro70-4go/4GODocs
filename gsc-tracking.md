@@ -47,4 +47,16 @@ da normale variabilità statistica su numeri piccoli.
   Salto grande di posizione media (11.9→23.4) probabilmente composizione query, non
   peggioramento reale — vedi criteri di lettura sopra
 
+### 2026-07-03
+- Ieri vs giorno prima: Clic 5 (-7) · Impressioni 378 (-224) · Pos. media 9.7 · CTR 1.3%
+- 7gg vs 7gg prec.: Clic 35 (-13) · Impressioni 2051 (-542)
+- Top query: "agenzia di viaggio vicino a me" (1 clic, pos.3) · "4 travel" (0, pos.3) · "4 viaggi" (0, pos.36) · "4travel" (0, pos.33) · "abbigliamento canada" (0, pos.18)
+- Opportunità: "agenzia viaggi" (7 imp, pos.3, 0 clic) · "agenzia viaggi senago" (18 imp, pos.2, 0 clic) · "alpiclub jacaranda tenerife" (6 imp, pos.49)
+- GBP 7gg vs prec.: Impr.search 15 (-60) · Clic sito 1 (-4) · Indicazioni 17 (+6) · Chiamate 2 (+1)
+- Nota: terzo giorno consecutivo con il confronto 7gg in territorio negativo su clic/impressioni
+  (-14, -9, -13 clic; -716, -515, -542 impressioni) — direzione consistente ma ancora sotto la
+  soglia di 5-7 rilevazioni stabilita per parlare di trend reale. Da notare: GBP mostra segnali
+  misti oggi, non uniformemente negativo (indicazioni e chiamate in miglioramento, mentre
+  impressioni search e clic sito restano in calo) — non tutto il quadro punta nella stessa direzione
+
 <!-- Aggiungere qui i prossimi giorni, stesso formato -->
