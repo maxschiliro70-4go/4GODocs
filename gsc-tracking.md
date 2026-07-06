@@ -60,3 +60,30 @@ da normale variabilità statistica su numeri piccoli.
   impressioni search e clic sito restano in calo) — non tutto il quadro punta nella stessa direzione
 
 <!-- Aggiungere qui i prossimi giorni, stesso formato -->
+
+---
+
+## Snapshot mensili GA4 + Search Console (28 giorni)
+
+Diverso dal log giornaliero sopra — qui si tracciano le foto periodiche più ampie
+(28 giorni), utili per vedere il quadro generale senza il rumore statistico dei
+confronti giorno-per-giorno.
+
+### 2026-07-06 (periodo 2026-06-08 → 2026-07-06)
+
+**Search Console (28gg)**
+- Clic totali: 142 · Impressioni: 8748 · CTR medio: 1.6% · Posizione media: 12.6
+- Top query: "agenzia viaggi senago" · "fourgo" · "agenzia di viaggio" · "agenzia di viaggio vicino a me" · "agenzia viaggi paderno dugnano" · "agenzia viaggi vicino a me" · "agenzie viaggi vicino a me" · "fourtravel" · "tanzania situazione attuale farnesina" · "4 gio"
+- Top pagine per crescita: vari articoli blog "cosa mettere in valigia per [destinazione]" con crescita marcata (Canada 113%, Cina/vaccini 72%, Sicilia 62%, Finlandia 45%, Scozia 45%, Messico 50%, Estonia 40%, Chia Sardegna 27%, Turchia 23%) — percentuali di crescita periodo su periodo, non quota sul totale clic
+
+**GA4 (28gg, 6 giu – 5 lug)**
+- Sessioni: 640 (+155% vs mese scorso) · Utenti attivi: 361 (+160%) · Visualizzazioni: 3806 · Durata media: 8m 40s · Bounce: 48%
+- Pagine più visitate: Homepage 450 (21%) · /login 198 (9%) · /interprete 182 (8%) · Pacchetti 172 (8%) · /demo-bot 93 (4%) · Contatti 75 (3%) · /come-funziona 71 (3%) · Chi Siamo 57 (3%)
+
+**Nota**: crescita sessioni/utenti molto marcata (+155%/+160%) — a differenza dei
+confronti giornalieri GSC (numeri piccoli, rumore statistico alto), un salto di
+questa entità su 28 giorni è un segnale reale, non casuale. Buon segno anche la
+presenza di /interprete e /demo-bot tra le pagine più visitate — indica interesse
+concreto per le funzionalità prodotto, non solo traffico homepage generico.
+
+<!-- Aggiungere qui i prossimi snapshot mensili, stesso formato -->
