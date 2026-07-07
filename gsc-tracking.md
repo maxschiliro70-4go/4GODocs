@@ -100,4 +100,19 @@ questa entità su 28 giorni è un segnale reale, non casuale. Buon segno anche l
 presenza di /interprete e /demo-bot tra le pagine più visitate — indica interesse
 concreto per le funzionalità prodotto, non solo traffico homepage generico.
 
+### 2026-06 (report ufficiale mensile Google Search Console, mese di calendario)
+- Clic (Web): 145 · Impressioni (Web): 9.74K · Pagine con prime impressioni: 238 (stimate)
+- Pagine con crescita maggiore vs mese prec.: "cosa mettere in valigia Canada orientale" (+12 clic) · "vaccini e salute Cina" (+8) · "cosa mettere in valigia Finlandia" (+3)
+- Pagine con miglior rendimento: Homepage (41 clic) · "valigia Canada orientale" (12) · "vaccini Cina" (8)
+- Query in maggiore aumento: "fourgo" (+3) · "agenzia viaggi vicino a me" (+1) · "agenzia di viaggio" (+1)
+- Query con miglior rendimento: "agenzia viaggi senago" (4) · "fourgo" (3) · "agenzia viaggi vicino a me" (1)
+- Dispositivi: mobile 91 · desktop 52 · tablet 2
+- Paesi: Italia 138 · Spagna 1 · San Marino 1
+- Nota: dato utile a completare lo snapshot 28gg del 06/07 (periodo 08/06-06/07, quasi
+  sovrapponibile ma non identico a questo mese di calendario) — buon segnale che gli
+  articoli "cosa mettere in valigia" per destinazioni diverse siano tra le pagine con
+  crescita più marcata, coerente con quanto già notato nello snapshot precedente. Traffico
+  quasi interamente italiano e a larga prevalenza mobile (91 vs 52 desktop) — nessuna
+  sorpresa per un'agenzia viaggi locale, ma utile tenerlo a mente per eventuali scelte UX.
+
 <!-- Aggiungere qui i prossimi snapshot mensili, stesso formato -->
