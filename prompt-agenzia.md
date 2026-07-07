@@ -1,4 +1,4 @@
-# 4GO FourTravel — Prompt Agenzia (aggiornato 30 Giugno 2026 — 4GO-23)
+# 4GO FourTravel — Prompt Agenzia (aggiornato 7 Luglio 2026 — 4GO-24)
 
 ## Stato branch
 - **main** `98be316` — produzione
@@ -86,10 +86,25 @@ Fix applicati in 4GO-23 (main):
 4. Nuove colonne DB nel migrate endpoint come `ALTER TABLE IF NOT EXISTS`
 5. Prisma schema-external columns → `$queryRawUnsafe` / `$executeRawUnsafe`
 6. Branch main: solo fix urgenti produzione — tutto il resto su develop
+7. WhatsApp: MAI testo libero (`type:'text'`) per notifiche proattive — Meta lo accetta
+   (200 OK) ma non lo consegna fuori dalla finestra 24h, fallimento silenzioso senza
+   errore visibile. Usare sempre template approvati (`notifica_nuova_richiesta` per
+   operatori, `notifica_documento_cliente` per clienti)
+8. File E2E/CI (`e2e-tests.yml`, `playwright.config.ts`, `e2e/*.spec.ts`) vivono
+   fisicamente su **main** (richiesto da GitHub Actions, che schedula solo dal branch
+   default) ma testano staging/develop — ogni modifica va applicata a entrambi i branch
+   nello stesso momento, verificata con diff esplicito
 
 ## Prossimi step
-1. SIAE raccomandata A/R inviata — attendere conferma/attestazione
-2. **Alla conferma SIAE, esplicitamente autorizzata da Emi**: cherry-pick massiccio
+1. **URGENTE — Migrazione Neon Azure→AWS**: Neon deprecando le regioni Azure (scadenza
+   email 5 ottobre 2026; doc ufficiale cita 27 agosto — discrepanza, non aspettare
+   l'ultimo giorno). DB piccoli (35MB staging, 77MB prod) → `pg_dump | psql` manuale
+   (più affidabile di Import Data Assistant Beta, 2 tentativi falliti/parziali).
+   PostgreSQL 18 installato su Windows/Git Bash di Emi, verificato funzionante.
+   **Prossimo passo concreto**: eseguire la migrazione vera (staging prima, poi prod).
+   Nessun impatto su backup (Prisma standard) né privacy policy (dice solo "server UE").
+2. SIAE raccomandata A/R inviata — attendere conferma/attestazione
+3. **Alla conferma SIAE, esplicitamente autorizzata da Emi**: cherry-pick massiccio
    develop→main di tutto l'arretrato accumulato (fix pagamenti 24/6 — Stripe year
    undefined, VioletaSubscription idempotency, PayPal validation, parser importi IT
    — più `e2e-tests.yml`, con schedule lunedì 07:15 riportato a testare produzione
@@ -98,12 +113,14 @@ Fix applicati in 4GO-23 (main):
    più conflitti di quelli di oggi) — leggere prima la sezione "Pattern risoluzione
    conflitti cherry-pick" sotto. Violetta go-live: rimuovi noindex → GSC →
    Product Hunt / There's An AI For That / Futurepedia / BotList
-3. ~~Pre go-live Violetta: Playwright E2E su develop~~ — COMPLETATO 4GO-22/23,
-   infrastruttura pronta (vedi sessione 4GO-23, parte 1 luglio sotto)
-4. Audit endpoint schedulati: multipreventivi, Fly&Drive, locations, social AI, WA/email AI, cortesia rientro, recensioni post-viaggio
-5. TikTok: attendere review
-6. 40 città service areas GBP
-7. Contatti LCP 11.3s: monitorare field data prima di intervenire
+4. ~~Pre go-live Violetta: Playwright E2E su develop~~ — COMPLETATO 4GO-22/23/24,
+   smoke test admin (35 pagine, login TOTP automatico) attivo, primo run lunedì
+   da confermare
+5. Audit endpoint schedulati: multipreventivi, Fly&Drive, locations, social AI, WA/email AI, cortesia rientro, recensioni post-viaggio
+6. TikTok: attendere review
+7. 40 città service areas GBP
+8. Contatti LCP 11.3s: monitorare field data prima di intervenire
+9. Contatti stampa (TTG Italia, Travel Quotidiano, L'Agenzia di Viaggi, FIAVET/Confcommercio Lombardia): inviati, in attesa di risposte
 
 ## Pattern risoluzione conflitti cherry-pick (per il prossimo massiccio, post-SIAE)
 Emersi durante il recupero di 35 commit in sessione 4GO-23 (1 luglio) — riapplicabili:
@@ -672,6 +689,68 @@ registrazione su cron-job.org oltre a Vercel Cron, coerente con la regola dei cr
   contenuto su entrambi i lati). Deciso di non sincronizzare ora — resta così fino alla
   conferma SIAE, poi cherry-pick mirato del necessario per il go-live Violetta, non una sync
   completa.
+
+## Sessione 4GO-23/24 (continua — 4-7 Luglio 2026)
+
+### WhatsApp — regola ESCALATE generalizzata + marcatore INFO_MANCANTE
+Confermato in produzione con casi reali (cliente Claudio Sharm el-Sheikh 3.800€ mai
+ricontattato, notifica operatori su cliente Emanuela Minusso mai arrivata) che il
+problema è strutturale: `type:'text'` fuori dalla finestra 24h → 200 OK ma zero
+consegna. Sostituito ovunque con template Meta approvati (vedi Regole assolute #7).
+Regola ESCALATE riscritta come principio generale (non pattern testuale rigido):
+qualsiasi contesto con destinazione+periodo+budget+volontà di procedere va **sempre**
+scalato. Nuovo marcatore `INFO_MANCANTE:` che Violetta aggiunge autonomamente (non
+regex su parole chiave) quando rimanda il cliente all'agenzia per un'informazione
+specifica mancante — notifica silenziosa agli operatori, nessun cambiamento visibile
+al cliente.
+
+### Bug reali trovati e corretti
+- `admin/location`: crash totale (`item is not defined`) su "Nuova Location" — variabile
+  fuori scope, residuo di copia-incolla
+- `location/confirm`: `totalPrice` non veniva mai aggiornato alla scelta cliente — solo
+  il nome salvato in una nota testuale
+- `free-payment`: mancava del tutto la notifica Telegram agli operatori
+- `email-ai` (admin): contatore "Potenziali" su tutto il DB, lista solo sui 50 thread
+  più recenti — disallineati
+- `benvenuto-desktop.html`: bug matematico nel CSS del ventaglio fotografico (varco 8%
+  tra due pannelli, triangolo nero visibile) — preesistente, mai notato
+- Logo email non uniformato su 6 endpoint (vecchio logo sfondo nero invece del
+  trasparente standard) — tutti corretti
+
+### Pinterest — refresh token mai implementato
+Stesso pattern del bug GBP di sessioni precedenti: `refreshToken` salvato al primo OAuth
+ma mai riutilizzato. Aggiunta `refreshPinterestToken()` con retry in `cron/social-post`
+e `admin/social-post`. Aggiunto `continuous_refresh: true` nello scambio codice→token per
+garantire il refresh token continuo invece del legacy (365gg, non rinnovabile).
+
+### Playwright E2E — smoke test admin (35 pagine)
+Login automatico (TOTP generato al volo con lo stesso algoritmo del backend), visita
+tutte le 35 pagine admin verificando assenza di errori JS non gestiti — pensato per
+intercettare bug come `admin/location`. Risolto: scheduling GitHub Actions richiede
+workflow su branch default (main), non partiva perché solo su develop; file di
+test/config mai portati su main; account test con credenziali hardcoded rilevato da
+GitGuardian (2 incidenti) → ruotate, endpoint temporanei rimossi da entrambi i branch.
+Divergenza develop/main: 2 differenze reali trovate e corrette (variabili TEST_ADMIN
+mancanti su develop, file di test mai portato lì).
+
+### Contenuti — pagine benvenuto e ufficio stampa
+Pagine benvenuto (mobile+desktop): box "È arrivata Violetta" e "Consulenza remota",
+numero WhatsApp aggiornato, foto hero reali (da Unsplash generico a foto blog), fix
+layout ventaglio. Contatti stampa inviati a TTG Italia, Travel Quotidiano, L'Agenzia di
+Viaggi Magazine (follow-up), FIAVET Lombardia, Confcommercio Lombardia — storia PMI che
+si costruisce l'AI da sola, controcorrente rispetto all'83% delle PMI italiane senza AI.
+Contenuto rivisto per accuratezza (firma Massimiliano Schilirò non Emiliano, stato SIAE
+"in corso di registrazione" non "protetto", canali WA/TG distinti prevendita/assistenza).
+
+### Infrastruttura — migrazione Neon (Azure → AWS)
+Neon deprecando le regioni Azure. Scadenza email: 5 ottobre 2026; documentazione
+ufficiale cita 27 agosto — discrepanza segnalata, meglio non aspettare l'ultimo giorno.
+DB piccolissimi (35MB staging, 77MB produzione): `pg_dump | psql` scelto come approccio
+più affidabile dopo 2 tentativi falliti/parziali con Neon Import Data Assistant (Beta).
+PostgreSQL 18 installato su Windows (Git Bash) di Emi, verificato funzionante con
+percorso completo. Verificato: nessun impatto su backup giornaliero (Prisma standard) né
+su privacy policy (dice solo "server in Europa", resta accurata migrando dentro l'UE).
+**Prossimo passo**: eseguire il comando di migrazione vero e proprio (staging prima).
 
 ## File chiave aggiunti/modificati oggi
 
