@@ -59,6 +59,20 @@ da normale variabilità statistica su numeri piccoli.
   misti oggi, non uniformemente negativo (indicazioni e chiamate in miglioramento, mentre
   impressioni search e clic sito restano in calo) — non tutto il quadro punta nella stessa direzione
 
+### 2026-07-04
+- Ieri vs giorno prima: Clic 8 (+3) · Impressioni 307 (-71) · Pos. media 11.9 · CTR 2.6%
+- 7gg vs 7gg prec.: Clic 34 (-7) · Impressioni 2006 (-522)
+- Top query: "4 travel" (0, pos.3) · "4 viaggi" (0, pos.36) · "4travel" (0, pos.33) · "abbigliamento canada" (0, pos.18) · "abbigliamento marocco uomo" (0, pos.75)
+- Opportunità: "agenzia viaggi" (6 imp, pos.3, 0 clic) · "agenzia viaggi paderno dugnano" (7 imp, pos.6) · "agenzia viaggi senago" (16 imp, pos.2)
+- GBP 7gg vs prec.: Impr.search 51 (-30) · Clic sito 1 (-3) · Indicazioni 18 (+6) · Chiamate 1 (-1)
+- Nota: quarto giorno consecutivo con 7gg negativo su clic/impressioni (-14,-9,-13,-7 clic;
+  -716,-515,-542,-522 impressioni) — pattern abbastanza stabile in ampiezza, ci avviciniamo
+  alla soglia di 5-7 giorni. Punto importante: questo calo era già in corso PRIMA della
+  riduzione blog-autogen (avvenuta il 03/07, effetto sui nuovi articoli da quel momento in
+  poi) — quindi il calo osservato finora non può essere causato da quella modifica, probabilmente
+  è una dinamica indipendente (stagionale? organica?). Utile per non attribuire erroneamente
+  la causa quando si guarderà l'effetto della riduzione più avanti
+
 <!-- Aggiungere qui i prossimi giorni, stesso formato -->
 
 ---
