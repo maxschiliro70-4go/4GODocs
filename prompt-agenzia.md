@@ -1,4 +1,4 @@
-# 4GO FourTravel — Prompt Agenzia (aggiornato 7 Luglio 2026 — 4GO-24)
+# 4GO FourTravel — Prompt Agenzia (aggiornato 7-8 Luglio 2026 — 4GO-24 chiusa)
 
 ## Stato branch
 - **main** `98be316` — produzione
@@ -96,13 +96,9 @@ Fix applicati in 4GO-23 (main):
    nello stesso momento, verificata con diff esplicito
 
 ## Prossimi step
-1. **URGENTE — Migrazione Neon Azure→AWS**: Neon deprecando le regioni Azure (scadenza
-   email 5 ottobre 2026; doc ufficiale cita 27 agosto — discrepanza, non aspettare
-   l'ultimo giorno). DB piccoli (35MB staging, 77MB prod) → `pg_dump | psql` manuale
-   (più affidabile di Import Data Assistant Beta, 2 tentativi falliti/parziali).
-   PostgreSQL 18 installato su Windows/Git Bash di Emi, verificato funzionante.
-   **Prossimo passo concreto**: eseguire la migrazione vera (staging prima, poi prod).
-   Nessun impatto su backup (Prisma standard) né privacy policy (dice solo "server UE").
+1. ~~URGENTE — Migrazione Neon Azure→AWS~~ — **COMPLETATA 4GO-24** (staging + produzione,
+   vedi sezione dedicata sotto). Password Neon vecchie/nuove esposte in chat, Emi ha scelto
+   di non ruotarle.
 2. SIAE raccomandata A/R inviata — attendere conferma/attestazione
 3. **Alla conferma SIAE, esplicitamente autorizzata da Emi**: cherry-pick massiccio
    develop→main di tutto l'arretrato accumulato (fix pagamenti 24/6 — Stripe year
@@ -754,17 +750,87 @@ su privacy policy (dice solo "server in Europa", resta accurata migrando dentro 
 
 ## File chiave aggiunti/modificati oggi
 
-| File | Modifica |
-|------|----------|
-| `src/lib/waTemplate.ts` → esteso, `src/lib/sendClientNotification.ts` | Template WA clienti |
-| `src/lib/emailSignature.ts`, `src/app/api/contact/route.ts` | Logo trasparente + box smerigliato |
-| `src/app/(admin)/admin/newsletter/page.tsx` | Handle social, logo, icone reali, scroll libreria, bottoni inline |
-| `public/social/whatsapp.png`, `public/logo-4go-fb.png` | Nuovi asset logo |
-| `src/app/api/cron/blog-autogen/route.ts`, `vercel.json` | Quota 10→3 |
-| `src/app/(admin)/admin/blog-settings/page.tsx`, `src/app/api/cron/blog-check/route.ts` | UI allineata al nuovo modello |
-| `src/lib/googleServiceAuth.ts`, `src/app/api/cron/index-check/route.ts` | Monitoraggio indicizzazione (nuovo) |
-| `src/app/api/cron/bounce-check/route.ts` | Rilevamento mancato recapito (nuovo) |
-| `src/app/(public)/selezione-viaggio/page.tsx` | Fix tema chiaro/scuro |
+## Sessione 4GO-24 (7-8 Luglio 2026)
+
+### Redirect blog — Albania e USA (404 reali da log Vercel)
+- `/blog/visto-per-albania-serve-costi-e-come-richiederlo` → 301 verso guida Albania esistente
+- `/blog/usa-quanto-costa-e-come-risparmiare-guida-completa-2024` → 301 verso articolo budget USA esistente
+- Filtro `blog-autogen` per l'Albania testato in entrambe le direzioni: rimosso e poi ripristinato — l'Albania non è UE/Schengen ma l'ingresso è comunque libero per italiani, politica stabile e consolidata, non un caso limite che valga un articolo dedicato
+
+### Fallback redirect slug blog — riscritto, più robusto
+Bug strutturale corretto: `redirect()` di Next.js lancia un errore speciale (`NEXT_REDIRECT`)
+che il vecchio `catch {}` generico sopprimeva silenziosamente, facendo cadere in 404 anche
+quando un match era stato trovato. Ora tutte le query restano nel `try/catch`, `redirect()`
+viene chiamato fuori. Aggiunto anche un terzo livello di match per sovrapposizione di parole
+chiave (soglia 60%, stopword italiane escluse) per coprire i casi dove il wording è stato
+riscritto oltre al semplice anno rimosso (es. caso USA: "guida-completa" sparito, non solo
+l'anno).
+
+### Preventivo AI — promosso a canale principale
+- Hero home "Richiedi Preventivo" e CTA di fondo su **tutte le pagine blog** (~600 articoli)
+  ora puntano a `/preventivo` (tool AI istantaneo con PDF via email) invece che a `/contatti`
+- CC `massimo@fourgo.it` sulla mail cliente generata da `/api/preventivo`
+- Notifica WhatsApp a Massimo (template approvato `notifica_nuova_richiesta`) aggiunta oltre
+  alla Telegram già esistente
+- Branding preventivo allineato: sostituito footer testuale bespoke con `emailFooter()`
+  standard (logo+icone social+disclaimer legale) — le altre 10 route email transazionali già
+  lo usavano, il preventivo era rimasto fuori
+- Dropdown "Tipo di viaggio" esteso da 8 a 20 categorie, allineate a `lib/tripTypes.ts`
+  (set canonico usato per i filtri `/pacchetti`) + Safari/Famiglia già presenti
+- Rimosso `PreventivoCTA.tsx` — componente orfano mai importato da nessuna route, superato
+  da `/preventivo/PreventivoPageClient.tsx`
+
+### Migrazione Neon — Azure → AWS completata (staging + produzione)
+Causa: Neon deprecando le regioni Azure (scadenza email 5 ottobre 2026, doc ufficiale cita
+27 agosto — discrepanza, non aspettare l'ultimo giorno).
+
+**Staging**: `ep-sweet-rain` (Azure) → `ep-shiny-dawn-asrkwx5q` (AWS, Frankfurt eu-central-1).
+**Produzione**: `4-GO` (Azure) → `ep-floral-unit-as5ptu6y` (AWS, stesso datacenter).
+
+Procedura seguita per entrambi: `pg_dump --no-owner --no-privileges` → `psql` restore →
+confronto conteggi righe (`pg_stat_user_tables`, `diff`) → verifica sequences (0, Prisma
+usa `cuid()` non `autoincrement`) → switch `DATABASE_URL` + `DIRECT_URL` su Vercel (env
+scope corretto: Production per prod, Preview per staging — **occhio**: `DIRECT_URL` è
+comparsa una volta su "All Environments" per errore, va sempre verificato lo scope di
+entrambe le variabili, non solo `DATABASE_URL`) → redeploy → verifica build log riga
+"Datasource" per confermare l'host giusto.
+
+**Nota tecnica per il prossimo che tocca lo schema**: `prisma/schema.prisma` usa
+`url = env("DATABASE_URL")` + `directUrl = env("DIRECT_URL")` — Prisma richiede
+sempre entrambe le variabili in locale, anche per comandi che userebbero solo una delle due
+(es. `prisma migrate resolve`).
+
+**Baseline staging**: dopo il restore via `pg_dump`/`psql` (non `prisma migrate deploy`),
+la tabella `_prisma_migrations` non esisteva → errore P3005 "schema not empty" nel build
+(non bloccante, `|| echo migrate skipped`). Risolto con loop
+`prisma migrate resolve --applied <nome>` su tutte le 110 cartelle di `prisma/migrations/`
+(develop ne ha 110, main 109 — un commit di differenza, non un errore). Verificato con
+`SELECT COUNT(*) FROM _prisma_migrations` = 110.
+
+**Password Neon esposte in chat** (4 totali: staging Azure, staging AWS, prod AWS, prod
+Azure ormai dismessa) — Emi ha scelto esplicitamente di non ruotarle. Rispettato, ma
+segnalato.
+
+### `/api/revalidate` — limite noto
+`revalidatePath(path)` senza il secondo parametro `'layout'` invalida solo il path esatto,
+non le sotto-pagine dinamiche (es. `?path=/blog` non rigenera `/blog/[slug]`). Per
+rigenerare una pagina blog specifica va chiamato con lo slug esatto:
+```
+curl "https://fourgo.it/api/revalidate?path=/blog/<slug>&secret=4go2026"
+```
+Da valutare in futuro: aggiungere `'layout'` come secondo argomento per invalidare a
+cascata, utile quando si tocca il template condiviso di ~600 pagine come il CTA di oggi.
+
+### free-payment — 400 "label e amount obbligatori" (chiarito, non un bug)
+Comportamento atteso: per location con più opzioni selezionabili dal cliente (5 hotel con
+prezzi diversi), il prezzo totale resta a 0 finché il cliente non sceglie — per design, non
+un dato mancante per errore. In questo flusso non si paga mai online: il cliente riceve la
+lista, sceglie, la location si aggiorna in automatico con la selezione. `free-payment` non è
+lo strumento giusto per questo caso e non va toccato.
+
+---
+
+
 
 ---
 
