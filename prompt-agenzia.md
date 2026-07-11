@@ -1,8 +1,16 @@
-# 4GO FourTravel — Prompt Agenzia (aggiornato 7-8 Luglio 2026 — 4GO-24 chiusa)
+# 4GO FourTravel — Prompt Agenzia (aggiornato 11 Luglio 2026 — 4GO-24 continuazione)
 
 ## Stato branch
-- **main** `98be316` — produzione
-- **develop** `a8d9b1d5` — Violetta staging (noindex attivo)
+- **main** `08574ad9` — produzione
+- **develop** `dda666d0` — staging (`staging.fourgo.it`)
+
+## Novità sessione 11 luglio (vedi `sessione-4go-24-11-luglio-2026.md` per dettagli completi)
+- `/preventivo` ridisegnata: mappa mondo interattiva con drill-down 180 paesi, ora locale live, no più form statico
+- Bug pdf-parse v2 risolto e centralizzato in `src/lib/pdfExtract.ts` — causa di dati mancanti nei preventivi multi-proposta
+- Allucinazione Violetta corretta (caso reale cliente) — notifiche operatori ora sempre via bot produzione (`tgOperator()`), non più staging-aware
+- Policy documenti viaggio allineata: Explorer 48h (nessun doc), Traveller/Concierge 7gg prima partenza — pulsante Telegram con countdown, nuovo cron `missing-docs-alert` (escalation a 9gg dalla partenza)
+- Telnyx → Twilio in admin/impostazioni
+- GBP: token OAuth ripubblicato dopo passaggio Testing→Production
 
 ## Stack
 Next.js 15 + Prisma + Neon PostgreSQL + Vercel Pro  
