@@ -125,6 +125,14 @@ Fix applicati in 4GO-23 (main):
 7. 40 città service areas GBP
 8. Contatti LCP 11.3s: monitorare field data prima di intervenire
 9. Contatti stampa (TTG Italia, Travel Quotidiano, L'Agenzia di Viaggi, FIAVET/Confcommercio Lombardia): inviati, in attesa di risposte
+10. **BDAV (Banca Dati Agenzie di Viaggio e Tour Operator)** — nuova piattaforma Ministero
+    Turismo presentata in demo il 10/07/2026 (sostituisce Infotrav), collegata a
+    Fiavet-Confcommercio. Assegnerà un codice identificativo nazionale obbligatorio da
+    esporre su sito/social/materiali pubblicitari per le agenzie in regola. 4GO probabilmente
+    già censita (eredita dati Infotrav) ma piattaforma ancora in fase demo, integrazione
+    Comuni/Camere di Commercio non completata. **Azione**: monitorare `bdav.ministeroturismo.gov.it`
+    nelle prossime settimane/mesi, appena il codice è assegnabile aggiungerlo a footer sito +
+    bio social — collegabile anche alla registrazione FIAVET/Confcommercio già in sospeso (punto 9)
 
 ## Pattern risoluzione conflitti cherry-pick (per il prossimo massiccio, post-SIAE)
 Emersi durante il recupero di 35 commit in sessione 4GO-23 (1 luglio) — riapplicabili:
