@@ -855,3 +855,131 @@ Emi incolla ogni giorno il report automatico Search Console — storico e criter
 lettura in `docs/gsc-tracking.md` (file separato, aggiornato quotidianamente).
 Consultarlo prima di commentare un nuovo report, per confrontare con i giorni precedenti
 invece di giudicare un singolo giorno isolato.
+
+---
+
+## Sessione 19 luglio 2026 (4GO-24, giornata lunghissima)
+
+### TikTok — review video.publish
+- Bug reale: destinazione multi-tappa (Route 66) → risposte audioguida sbagliate,
+  timezone sempre New York invece della tappa reale, dedup ID JS precision loss
+  (Number.MAX_SAFE_INTEGER) su ID Threads/TikTok troncava le ultime cifre — estratti
+  ID sempre da testo grezzo prima di JSON.parse.
+- Pagina ad hoc `/admin/tiktok-sandbox-test` + `/api/admin/tiktok-sandbox-publish`
+  isolate dallo strumento ufficiale — requisiti UX linee guida TikTok implementati
+  (creator_info, privacy senza default, interazioni OFF default, disclosure
+  commerciale, consenso Music Usage). **Da eliminare dopo approvazione review**
+  (vedi memoria/TODO).
+- Fix reale preesistente: `tiktokAccessToken`/`tiktokRefreshToken` fuori schema
+  Prisma, `update()` falliva sempre — serve `$executeRawUnsafe`.
+
+### Threads — integrazione completa
+- OAuth (`/api/admin/threads/auth` + `/callback`), refresh token automatico
+  (`src/lib/threads.ts`), publish testo/immagine, deauthorize + data-deletion
+  callback richiesti da Meta.
+- Bug reale: stesso precision-loss ID di TikTok su user_id Threads (17+ cifre,
+  supera 2^53) — estratto via regex dal testo grezzo, non `.json()`.
+- Bug reale: container non pronto al publish (specie con immagine) — polling
+  reale dello stato invece di attesa fissa.
+- Integrato in Post AI (non pagina dedicata separata) — **bug trovato per caso**:
+  il bottone "Pubblica su Facebook/Instagram" in Post AI non aveva mai funzionato
+  (variabili di un altro componente, mai dichiarate in questo scope).
+
+### Facebook — pages_manage_posts
+- Token rigenerato con lo scope giusto dopo approvazione Meta review.
+- Bug reale: `FB_PAGE_ACCESS_TOKEN` (env var vecchia, prioritaria nel codice)
+  sovrascriveva silenziosamente il nuovo `FB_PAGE_TOKEN` — verificare sempre
+  quale env var il codice usa DAVVERO prima di dire "sistemato".
+- Pubblicazione automatica settimanale riattivata (era disattivata via commento
+  "Facebook rimosso — Meta verifica pendente", mai riattivata dopo l'approvazione).
+
+### Violetta — bug reali trovati da conversazioni clienti vere
+Pattern ricorrente della giornata: **quasi ogni bug veniva da un cliente reale in
+viaggio**, non da test interni. Lezione: monitorare le conversazioni live è più
+efficace del testing sintetico per questo tipo di prodotto.
+
+- **Audioguida multi-tappa**: usava `pkg.destination` intero ("Chicago, Route 66,
+  Los Angeles") invece della tappa reale → ora chiede sempre conferma esplicita
+  della città, mai deduzione silenziosa. Matching candidato reso tollerante
+  (parola chiave, non nome completo) dopo che "Oklahoma" non matchava "Oklahoma
+  City".
+- **Regressione autoinflitta**: il fix sopra creava una trappola — qualsiasi
+  messaggio dopo "in che città sei" (anche "annulla") veniva preso come nome
+  città. Aggiunta via di fuga + controllo di plausibilità prima di accettare
+  testo libero come nome luogo.
+- **Categoria negozio mancante**: richiesta "supermercato" rispondeva con
+  ristoranti (nessun caso `shopping_mall`/`supermarket` nel gestore posizione
+  GPS, solo bar/tourist_attraction/cafe + default ristorante).
+- **Classificazione INFO calcolata e mai usata**: il classificatore AI diceva
+  correttamente "INFO" per una domanda sui biglietti, ma il codice scartava quel
+  risultato con un commento esplicito "lascia decidere alla regex" — la regex di
+  fallback non copriva il plurale "biglietti". Bug identico su Perplexity/Brave
+  per "differenziata rifiuti" (keyword assenti da `isFactualQuery`).
+- **Ragionamento interno che trapela**: il modello scriveva "La richiesta è
+  chiara, procedo con l'audioguida" come testo VISIBILE al cliente, prima del
+  contenuto vero — il prompt chiedeva di "valutare il contesto" senza mai dire
+  che la valutazione dovesse restare interna.
+- **Audioguida inventa siti/prezzi**: percorso audioguida non ha mai accesso a
+  Perplexity/Brave (grounding zero) — ha inventato un sito ufficiale per
+  biglietti (dominio reale ma sbagliato per lo scopo). Aggiunta regola esplicita
+  anti-invenzione siti/email/telefono/prezzi in entrambi i prompt audioguida.
+- **Confronto prezzi sbagliato**: due opzioni parcheggio identiche (25$/giorno)
+  presentate come "standard" vs "più economica" — aggiunta regola di verifica
+  prima di ogni confronto prezzo.
+- **Hotel "di stasera" sbagliato + doppia conferma errata**: su un road trip
+  lungo (Route 66, 12+ tappe), ha risposto con il PRIMO hotel del documento
+  (Chicago, settimane prima) invece della tappa reale (Albuquerque) — e quando
+  il cliente ha protestato ("prima che ti metto le mani addosso"), ha
+  **ribadito la stessa risposta sbagliata con sicurezza** invece di riverificare.
+  Aggiunta regola: verificare sempre l'intervallo di date di ogni hotel contro
+  oggi, mai il primo trovato, scalare se incerto.
+- **Escalation frustrazione cliente** (nuova feature): `isFrustrated()` rileva
+  rabbia/frustrazione esplicita (minacce, insulti, "te l'ho chiesto N volte",
+  turpiloquio) → notifica SEMPRE Massimo/Alessia/Inga su Telegram con contesto,
+  anche se Violetta ha già risolto da sola. Un cliente arrabbiato merita sempre
+  un contatto umano, non solo la risposta tecnicamente corretta.
+- **Guida fisica + audioguida**: per attività rischiose (trekking impegnativi)
+  Violetta continua a consigliare una guida fisica per sicurezza, ora propone
+  anche esplicitamente di farla prenotare tramite 4&GO (scala solo su conferma
+  esplicita del cliente, mai al primo messaggio) — E menziona sempre l'audioguida
+  in italiano come servizio complementare, utile se la guida locale non parla
+  italiano.
+- **Luoghi iconici**: sostituita la lista fissa `ICONIC_PLACES` (richiedeva
+  aggiornamento manuale per ogni nuovo viaggio) con classificazione AI (Haiku,
+  ~200ms) in tutti e 4 i punti che la usavano — scala automaticamente, lista
+  fissa resta solo come fallback.
+- **Concordanza di genere**: "parla sempre al femminile" si applica solo a come
+  Violetta parla di sé, non al gruppo a cui si rivolge (es. "mamma con figlio
+  maschio" → maschile plurale, non femminile di default).
+
+### WhatsApp — notifiche
+- Bug reale: `notifica_nuova_richiesta` (a Massimo) aveva un HEADER immagine
+  obbligatorio su Meta mai inviato dal codice → errore 132012 poi 100.
+  `notifica_documento_cliente` invece era già corretta. **Lezione**: quando un
+  template WA fallisce, ispezionare la struttura REALE via API Meta
+  (`/{wabaId}/message_templates?name=...`) invece di tentare formati diversi
+  alla cieca — ha rivelato l'header mancante in una chiamata sola.
+- Bug reale: "invia documenti" da admin apriva WhatsApp del telefono
+  dell'operatore (link `wa.me` manuale) invece di mandare per davvero —
+  ricollegato a `sendClientNotification()` (già usato da altri flussi).
+
+### Altri fix reali della giornata
+- Quiz Destinazione: richieste sempre taggate "Form Contatti" (campo `source`
+  mai impostato, schema prevede `web-quiz` ma il codice non lo scriveva mai).
+- Preventivo online: allegato `.html` con estensione `.pdf` fittizia, mai un
+  PDF vero — ora generato via Browserless (stesso metodo del registro GDPR).
+- Budget preventivo: form aveva "a persona" esplicito solo sulla prima fascia
+  di 5 opzioni, l'AI interpretava le altre come budget raddoppiato — uniformato
+  "a persona" su tutte + regola prompt di non assumere mai l'interpretazione.
+- Numero telefono GBP: mostrava il mobile WhatsApp invece del fisso ufficiale.
+- Documenti legali: Threads aggiunto a Privacy (sez. 5+10) e Termini (nuovo
+  Art. 15) — mancava nonostante l'integrazione fatta nella stessa sessione.
+
+### Pattern trasversale della giornata
+La maggior parte dei bug non erano allucinazioni pure ma **dati reali letti/
+interpretati male**: URL reale ma per lo scopo sbagliato, primo hotel del
+documento invece di quello datato giusto, categoria plausibile ma non quella
+richiesta, classificazione corretta ma scartata dal codice. Vale la pena, nei
+prossimi controlli, guardare sempre se il dato "sbagliato" esiste comunque da
+qualche parte nei documenti/nel codice prima di dedurre che sia inventato di
+sana pianta — la causa e il fix sono diversi nei due casi.

@@ -250,3 +250,23 @@ Admin → Utenti → clicca sul nome di un operatore:
 - Orari volo reali da `flightOut/flightReturn`, tipo transfer corretto (collettivo/privato)
 - Prezzi hotel in H1 (massima evidenza), asterisco `*` con nota inclusi
 - Slide date dedicata con tabella partenza/rientro/notti/range prezzi
+
+### Integrazioni social — stato al 19 luglio 2026
+- **Facebook**: `pages_manage_posts` approvato da Meta, pubblicazione automatica
+  settimanale (lunedì) attiva su Facebook+Instagram+Pinterest+Threads
+- **TikTok**: `video.upload` (draft) live in produzione. `video.publish` in
+  review — pagina ad hoc `/admin/tiktok-sandbox-test` per il video dimostrativo,
+  da eliminare dopo l'approvazione
+- **Threads**: integrazione completa (OAuth, publish, refresh automatico) —
+  Admin → Social AI → Post AI, sezione ACCOUNT THREADS per collegare l'account
+- **Pinterest**: attivo, pubblicazione automatica settimanale
+- Passaggio da settimanale a giornaliero: pronto (`getDayNumber()` in
+  `cron/social-post/route.ts`), da attivare cambiando lo schedule quando confermato
+
+### Escalation automatica frustrazione cliente (nuovo, 19 luglio)
+Se un cliente scrive qualcosa che segnala rabbia/frustrazione esplicita
+(minacce, insulti, "te l'ho già chiesto N volte", turpiloquio verso il
+servizio), Massimo/Alessia/Inga ricevono subito una notifica Telegram con
+contesto cliente/prenotazione — anche se Violetta ha già risolto da sola.
+Serve a garantire un contatto umano di scuse quando serve davvero, non solo
+la correzione tecnica.
