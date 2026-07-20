@@ -8,7 +8,7 @@
 - `/preventivo` ridisegnata: mappa mondo interattiva con drill-down 180 paesi, ora locale live, no più form statico
 - Bug pdf-parse v2 risolto e centralizzato in `src/lib/pdfExtract.ts` — causa di dati mancanti nei preventivi multi-proposta
 - Allucinazione Violetta corretta (caso reale cliente) — notifiche operatori ora sempre via bot produzione (`tgOperator()`), non più staging-aware
-- Policy documenti viaggio allineata: Explorer 48h (nessun doc), Traveller/Concierge 7gg prima partenza — pulsante Telegram con countdown, nuovo cron `missing-docs-alert` (escalation a 9gg dalla partenza)
+- Policy documenti viaggio allineata: Explorer 48h (nessun doc), Traveller/Concierge 5gg prima partenza — pulsante Telegram con countdown, cron `missing-docs-alert` (escalation a 7gg dalla partenza, aggiornato da 9gg il 20/07/2026 insieme alla soglia cliente da 7 a 5gg)
 - Telnyx → Twilio in admin/impostazioni
 - GBP: token OAuth ripubblicato dopo passaggio Testing→Production
 
