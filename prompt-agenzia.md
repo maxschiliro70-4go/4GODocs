@@ -1,8 +1,24 @@
-# 4GO FourTravel — Prompt Agenzia (aggiornato 11 Luglio 2026 — 4GO-24 continuazione)
+# 4GO FourTravel — Prompt Agenzia (aggiornato 22 Luglio 2026 — 4GO-24 continuazione)
 
 ## Stato branch
-- **main** `08574ad9` — produzione
-- **develop** `dda666d0` — staging (`staging.fourgo.it`)
+- **main** `1b52972` — produzione
+- **develop** `5a7f226` — staging (`staging.fourgo.it`)
+
+## Novità sessione 22 luglio (giornata lunga, molti fix reali da segnalazioni utente)
+- **Documenti >3.2MB**: prima venivano scartati silenziosamente (fileUrl restava null, cliente vedeva il documento ma senza bottone Scarica). Fix strutturale con upload client-side diretto su Vercel Blob (nuova route `tg-documents-upload`), bypassa il limite 4.5MB delle funzioni serverless. Aggiornati tutti i punti che leggevano fileUrl: download cliente/admin, allegati email, invio via bot Telegram (nuova `sendDocumentByUrl`)
+- **"📋 Documenti viaggio" via bot**: non invia più tutto automaticamente (rischio centinaia di MB via dati mobili) — ora mostra una lista a bottoni, il cliente sceglie cosa scaricare. Nuovo callback `doc:<id>` con verifica che il documento appartenga davvero al cliente
+- **Audioguida duplicata**: cliente ha ricevuto la stessa audioguida 2 volte (consegna doppia Telegram in ritardo, il lock esistente non bastava). Aggiunto raffreddamento 5 minuti per luogo + **cache narrazioni** (`AudioguideCache`, nuovo modello) — riusa contenuto già generato per lo stesso luogo invece di richiamare l'AI da zero ogni volta
+- **Blog foto duplicate**: causa vera trovata — `/api/admin/blog-reimage` confrontava URL grezze invece di pathname normalizzato, poteva assegnare "nuove" foto in realtà già in uso peggiorando il problema che doveva risolvere. Corretto + convertito a budget di tempo (era limitato a 15/giro, insufficiente per un arretrato di centinaia). Disattivato il trigger automatico da `blog-autogen` (rischio corsa critica con `blog-fix-images`, i due sistemi si accavallavano sullo stesso arretrato) — resta solo `blog-fix-images` (9:00) responsabile della pulizia
+- **Post social con foto sbagliata**: pacchetto combinato (es. "Sudafrica & Seychelles") matchava come sottostringa e vinceva sulla destinazione dedicata. Query ora preferisce match esatto → startsWith → contains, in quest'ordine
+- **Dicitura trasparenza AI** (AI Act art. 50) aggiunta ovunque: post social automatici (FB/IG/Pinterest/Threads), generatore manuale post AI, post GBP — con troncamento sicuro dove il limite piattaforma è stretto (Threads/Pinterest 500 car., GBP 1500 car.)
+- **Nuova dashboard `/admin/social-insights`**: grafici per piattaforma e per tema (recharts, nuova dipendenza), per capire cosa funziona prima di investire in ads. Nuovo modello `SocialPost` + cron `social-insights` (21:00) che recupera le metriche reali dalle 4 piattaforme — dati partono da zero da oggi, nessuno storico pre-esistente
+- **41 pagine città** (`/agenzia-viaggi/[citta]`): generate FAQ specifiche per tutte (endpoint già esistente ma mai eseguito), JSON-LD FAQPage esteso a tutte (prima solo Milano) — strategia AEO: le AI citano 4GO solo su query iper-locali (confermato con test reale), non su destinazioni generiche dove competono operatori con anni di autorità
+- **Playwright E2E**: spostato da staging a produzione (main/fourgo.it) su richiesta esplicita — develop/main troppo divergenti perché testare staging avesse senso, main è quello usato davvero ogni giorno
+- **Pubblicazione social**: passata da settimanale a giornaliera (20:00), confermato funzionante su tutte e 4 le piattaforme
+- **Dedup email**: notifiche doppie per la stessa email risolte con Message-ID reale (nuovo `ProcessedEmailLog`), non più affidamento sullo stato IMAP seen/unseen (corsa critica tra poll ravvicinati)
+- **index-google**: raffreddamento 6h per evitare ri-sottomissioni della stessa URL a Google (nuovo `IndexSubmissionLog`) — scoperto un problema di link-preview/click ripetuti che duplicava le notifiche
+- npm: risolta vulnerabilità linkify-it/mailparser (DoS). Resta aperta PR Dependabot `sharp` 0.35.0 (breaking change, checklist di test in "Prossimi step")
+- 3 nuovi modelli oggi: `AudioguideCache`, `IndexSubmissionLog`, `ProcessedEmailLog`, `SocialPost` — tutti con CREATE TABLE in `/api/admin/migrate`, eseguito
 
 ## Novità sessione 11 luglio (vedi `sessione-4go-24-11-luglio-2026.md` per dettagli completi)
 - `/preventivo` ridisegnata: mappa mondo interattiva con drill-down 180 paesi, ora locale live, no più form statico
@@ -81,10 +97,14 @@ Fix applicati in 4GO-23 (main):
 - Homepage 16.7s LCP era causato da `1cc86c5` (rimozione opacity:0): ora PSI misura hero image (Pexels via /_next/image) invece di h1. Risolto spontaneamente (92/2.1s) — monitorare field data CrUX.
 
 ## Cron attivi (tutti su fourgo.it)
-- preventivi-poll (*/5), blog-autogen (4×/day 06:00–06:15 + fix-images 07:00)
+- preventivi-poll (*/5), blog-autogen (4×/day 06:00–06:15 + fix-images 07:00 — dal 22/07 blog-autogen non innesca più blog-reimage per i duplicati, solo blog-fix-images se ne occupa, evita corsa critica tra i due)
 - blog-check (1° del mese 8:00), password-expiry (09:00), appointment-reminders (ogni min)
 - inbox-organizer (Lun 7:30 — su cron-job.org E Vercel Cron, maxDuration=60)
-- gbp-post (daily)
+- gbp-post (daily, 8:00 — dicitura AI aggiunta 22/07)
+- social-post (daily dal 21/07, 18:00 — 4 piattaforme FB/IG/Pinterest/Threads, dicitura AI aggiunta)
+- social-insights (daily, 21:00, nuovo 22/07) — recupera metriche reali post pubblicati, alimenta `/admin/social-insights`
+- index-google (daily 9:00) — raffreddamento 6h anti-doppia-sottomissione dal 22/07
+- index-check (Lun 7:45) — ora notifica sempre (non solo sopra soglia), per avere conferma di routine invece del silenzio ambiguo
 - **Regola**: ogni cron va registrato SIA su cron-job.org SIA in vercel.json
 
 ## Regole assolute
