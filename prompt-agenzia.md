@@ -133,6 +133,20 @@ Fix applicati in 4GO-23 (main):
     Comuni/Camere di Commercio non completata. **Azione**: monitorare `bdav.ministeroturismo.gov.it`
     nelle prossime settimane/mesi, appena il codice è assegnabile aggiungerlo a footer sito +
     bio social — collegabile anche alla registrazione FIAVET/Confcommercio già in sospeso (punto 9)
+11. **PR Dependabot in sospeso: aggiornamento `sharp` 0.35.0** (branch
+    `dependabot/npm_and_yarn/sharp-0.35.0`) — corregge CVE-2026-33327/33328/35590/35591
+    (libvips), ma è breaking change. `sharp` non è mai chiamato direttamente nel codice,
+    solo da Next.js per `next/image` — impatto limitato al rendering immagini, non a script
+    di elaborazione custom. **Prima di fare merge, testare sull'anteprima Vercel del branch
+    (non su produzione)**:
+    - Homepage: hero image si carica bene
+    - Una pagina pacchetto (`/pacchetti/[slug]`): foto carosello senza distorsioni/tagli
+    - Un articolo blog con foto di copertina: caricamento normale
+    - Confronto qualità visiva di 2-3 immagini specifiche prima/dopo (possibili differenze
+      di compressione/nitidezza di default tra versioni sharp)
+    - Console browser (F12) su 2-3 pagine con molte foto: nessun 404/500 su URL
+      `/_next/image?url=...`
+    - Solo se tutto ok → merge della PR da GitHub (isolato, non serve intervento sessione)
 
 ## Pattern risoluzione conflitti cherry-pick (per il prossimo massiccio, post-SIAE)
 Emersi durante il recupero di 35 commit in sessione 4GO-23 (1 luglio) — riapplicabili:
