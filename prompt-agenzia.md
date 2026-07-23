@@ -5,6 +5,7 @@
 - **develop** `5a7f226` — staging (`staging.fourgo.it`)
 
 ## Novità sessione 22 luglio (giornata lunga, molti fix reali da segnalazioni utente)
+- **TikTok Developer abbandonato**: review rifiutata per policy (non un problema di formulazione — TikTok non approva app di singola azienda che pubblica sul proprio account, solo strumenti multi-tenant). Pubblicazione resta manuale, dettagli completi in "Sessione 19 luglio" più sotto
 - **Documenti >3.2MB**: prima venivano scartati silenziosamente (fileUrl restava null, cliente vedeva il documento ma senza bottone Scarica). Fix strutturale con upload client-side diretto su Vercel Blob (nuova route `tg-documents-upload`), bypassa il limite 4.5MB delle funzioni serverless. Aggiornati tutti i punti che leggevano fileUrl: download cliente/admin, allegati email, invio via bot Telegram (nuova `sendDocumentByUrl`)
 - **"📋 Documenti viaggio" via bot**: non invia più tutto automaticamente (rischio centinaia di MB via dati mobili) — ora mostra una lista a bottoni, il cliente sceglie cosa scaricare. Nuovo callback `doc:<id>` con verifica che il documento appartenga davvero al cliente
 - **Audioguida duplicata**: cliente ha ricevuto la stessa audioguida 2 volte (consegna doppia Telegram in ritardo, il lock esistente non bastava). Aggiunto raffreddamento 5 minuti per luogo + **cache narrazioni** (`AudioguideCache`, nuovo modello) — riusa contenuto già generato per lo stesso luogo invece di richiamare l'AI da zero ogni volta
@@ -894,7 +895,7 @@ invece di giudicare un singolo giorno isolato.
 
 ## Sessione 19 luglio 2026 (4GO-24, giornata lunghissima)
 
-### TikTok — review video.publish
+### TikTok — review video.publish RIFIUTATA per policy (22/07/2026)
 - Bug reale: destinazione multi-tappa (Route 66) → risposte audioguida sbagliate,
   timezone sempre New York invece della tappa reale, dedup ID JS precision loss
   (Number.MAX_SAFE_INTEGER) su ID Threads/TikTok troncava le ultime cifre — estratti
@@ -902,10 +903,33 @@ invece di giudicare un singolo giorno isolato.
 - Pagina ad hoc `/admin/tiktok-sandbox-test` + `/api/admin/tiktok-sandbox-publish`
   isolate dallo strumento ufficiale — requisiti UX linee guida TikTok implementati
   (creator_info, privacy senza default, interazioni OFF default, disclosure
-  commerciale, consenso Music Usage). **Da eliminare dopo approvazione review**
-  (vedi memoria/TODO).
+  commerciale, consenso Music Usage).
 - Fix reale preesistente: `tiktokAccessToken`/`tiktokRefreshToken` fuori schema
   Prisma, `update()` falliva sempre — serve `$executeRawUnsafe`.
+- **Esito review (22/07/2026): RIFIUTATA.** Motivo esplicito di TikTok: "App will
+  not be approved for personal or company internal use... TikTok for Developers
+  currently does not support personal or internal company use." La Content
+  Posting API in produzione è pensata per strumenti multi-tenant (tipo Buffer,
+  Later — un'app che serve molte aziende diverse), non per una singola azienda
+  che pubblica sul proprio account. **Decisione: si abbandona questa strada**,
+  non ha senso ripresentare la richiesta con parole diverse, è un
+  disallineamento strutturale di policy, non un problema di formulazione.
+  Pubblicazione TikTok resta manuale (funziona, richiede solo più tempo
+  operatore) — l'app sandbox resta com'è, innocua, non serve più eliminarla
+  "dopo approvazione" perché l'approvazione non arriverà per questo caso d'uso.
+  Se in futuro dovesse cambiare la situazione (es. 4GO diventa multi-tenant
+  gestendo account di più clienti), si potrebbe ripresentare la richiesta con
+  un caso d'uso genuinamente diverso.
+- Alternative valutate e scartate per ora: aggregatore terzo (Blotato/Later/
+  Buffer — loro hanno già l'accesso approvato) implica costo mensile e
+  dipendenza in più per un solo post/giorno, non ritenuto necessario al
+  momento. Rivalutare se il volume di pubblicazione dovesse aumentare molto.
+- Flusso admin comunque semplificato il 22/07: uniti i passaggi "carica video
+  su blob" + "genera caption" in un solo bottone (erano due click separati
+  senza bisogno di revisione tra loro); aggiunto bottone dedicato "Copia
+  caption per TikTok" per velocizzare il passaggio manuale finale. Passaggio
+  "pubblica" resta separato su richiesta esplicita (revisione caption prima
+  dell'invio).
 
 ### Threads — integrazione completa
 - OAuth (`/api/admin/threads/auth` + `/callback`), refresh token automatico
