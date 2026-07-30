@@ -129,6 +129,12 @@ Fix applicati in 4GO-23 (main):
    nello stesso momento, verificata con diff esplicito
 
 ## Prossimi step
+0. **Stripe Radar — decidere entro gennaio 2027**: email Stripe 30/07/2026 — ristrutturazione
+   in 4 livelli (Lite/Standard/Plus/Pro). Prova gratuita "Radar Standard" fino al 22/01/2027,
+   poi addebito automatico €0,05/transazione esaminata se non si interviene. Alternativa
+   gratuita per sempre: passare a "Radar Lite" (un click in Dashboard) prima della scadenza,
+   protezione più basilare (solo carte, no analisi frodi avanzata). Nessuna azione richiesta
+   ora — rivalutare quando la scadenza si avvicina (es. dicembre 2026)
 1. ~~URGENTE — Migrazione Neon Azure→AWS~~ — **COMPLETATA 4GO-24** (staging + produzione,
    vedi sezione dedicata sotto). Password Neon vecchie/nuove esposte in chat, Emi ha scelto
    di non ruotarle.
