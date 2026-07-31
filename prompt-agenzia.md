@@ -138,7 +138,14 @@ Fix applicati in 4GO-23 (main):
 1. ~~URGENTE — Migrazione Neon Azure→AWS~~ — **COMPLETATA 4GO-24** (staging + produzione,
    vedi sezione dedicata sotto). Password Neon vecchie/nuove esposte in chat, Emi ha scelto
    di non ruotarle.
-2. SIAE raccomandata A/R inviata — attendere conferma/attestazione
+2. ~~SIAE raccomandata A/R inviata — attendere conferma/attestazione~~ — **CONFERMATO 31/07/2026**.
+   Attestazione ricevuta: registrato il 02/07/2026, numero progressivo D000031428, numero
+   registrazione D000029908. Titolo depositato: "VIOLETTA-ASSISTENTE AI PER TURISMO", autore
+   Emiliano Marchesi. **Questo sblocca**: cherry-pick develop→main (Lakera Guard + flussi
+   Violetta + Playwright), rimozione noindex da /demo-bot e /violetta, submit GSC nuove
+   pagine, listing Product Hunt/AI directories — vedi sezione "Post-SIAE go-live" più sotto.
+   Il cherry-pick massiccio resta comunque da pianificare con attenzione (156+ commit solo
+   develop, 300+ solo main) — non da fare a cuor leggero solo perché ora è sbloccato
 3. **Alla conferma SIAE, esplicitamente autorizzata da Emi**: cherry-pick massiccio
    develop→main di tutto l'arretrato accumulato (fix pagamenti 24/6 — Stripe year
    undefined, VioletaSubscription idempotency, PayPal validation, parser importi IT
