@@ -144,8 +144,21 @@ Fix applicati in 4GO-23 (main):
    Emiliano Marchesi. **Questo sblocca**: cherry-pick develop→main (Lakera Guard + flussi
    Violetta + Playwright), rimozione noindex da /demo-bot e /violetta, submit GSC nuove
    pagine, listing Product Hunt/AI directories — vedi sezione "Post-SIAE go-live" più sotto.
-   Il cherry-pick massiccio resta comunque da pianificare con attenzione (156+ commit solo
-   develop, 300+ solo main) — non da fare a cuor leggero solo perché ora è sbloccato
+   Il cherry-pick massiccio resta comunque da pianificare con attenzione (302 commit solo
+   develop, 622 solo main al 31/07 — numeri cresciuti parecchio da mesi fa) — non da fare
+   a cuor leggero solo perché ora è sbloccato. **Iniziato 31/07/2026 via Claude Code** (repo
+   locale sul PC di Emi), piano concordato in 3 gruppi: 1) Interprete/Ristorante Concierge
+   Vapi (basso rischio, quasi tutto codice nuovo) 2) Pagamenti Violetta commerciale (Stripe
+   checkout abbonamenti + PayPal capture) 3) UI landing Violetta. `telegram/webhook/route.ts`
+   lasciato per ultimo, riga per riga (+791 righe di differenza, il file più condiviso).
+   **ATTENZIONE**: alcuni file su develop hanno CODICE RIMOSSO rispetto a main (pinterest.ts,
+   threads.ts, googleServiceAuth.ts) — develop è indietro su queste integrazioni lavorate
+   di recente su main, va portato solo codice nuovo, mai sovrascritta una versione più vecchia.
+   **ULTIMO STEP dopo il cherry-pick completo** (promemoria esplicito di Emi, 31/07/2026):
+   rimuovere il `noindex` da TUTTE le pagine Violetta-correlate (non solo /demo-bot e
+   /violetta) e spingere attivamente su SEO, AEO (AI answer engines — Perplexity/Claude/
+   Gemini, vedi lavoro FAQ città del 22/07) e GEO (generative engine optimization) — non
+   limitarsi a togliere il blocco, promuovere attivamente la visibilità una volta live
 3. **Alla conferma SIAE, esplicitamente autorizzata da Emi**: cherry-pick massiccio
    develop→main di tutto l'arretrato accumulato (fix pagamenti 24/6 — Stripe year
    undefined, VioletaSubscription idempotency, PayPal validation, parser importi IT
