@@ -129,6 +129,15 @@ Fix applicati in 4GO-23 (main):
    nello stesso momento, verificata con diff esplicito
 
 ## Prossimi step
+0a. **Duffel webhook — signing secret irrecuperabile da Vercel** (01/08/2026): il secret
+    DUFFEL_WEBHOOK_SECRET configurato è confermato corretto (verificato con una sonda HMAC
+    lato server durante il fix della verifica firma — vedi sezione dedicata sotto), ma è
+    marcato "Sensitive" su Vercel e Duffel non lo mostra mai più dopo la creazione del
+    webhook (conferma dalla loro documentazione). Se l'ambiente Vercel si perdesse, l'unica
+    strada sarebbe cancellare e ricreare il webhook Duffel per ottenere un nuovo secret.
+    Da fare con calma, in un momento tranquillo (non urgente): ricreare comunque il webhook
+    apposta per avere un secret salvato anche in un password manager, non solo su Vercel —
+    pura igiene, non risponde a un problema attuale
 0. **Stripe Radar — decidere entro gennaio 2027**: email Stripe 30/07/2026 — ristrutturazione
    in 4 livelli (Lite/Standard/Plus/Pro). Prova gratuita "Radar Standard" fino al 22/01/2027,
    poi addebito automatico €0,05/transazione esaminata se non si interviene. Alternativa
