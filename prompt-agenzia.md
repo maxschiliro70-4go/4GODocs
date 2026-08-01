@@ -167,7 +167,15 @@ Fix applicati in 4GO-23 (main):
    Claude Code per il volume atteso (settimane di sviluppo Violetta divergente,
    più conflitti di quelli di oggi) — leggere prima la sezione "Pattern risoluzione
    conflitti cherry-pick" sotto. Violetta go-live: rimuovi noindex → GSC →
-   Product Hunt / There's An AI For That / Futurepedia / BotList
+   Product Hunt / There's An AI For That / Futurepedia / BotList — link diretti di
+   sottomissione (verificati 31/07/2026):
+   - There's An AI For That: theresanaiforthat.com/launch/ (opzione gratuita disponibile,
+     featured a pagamento ~$347)
+   - Futurepedia: futurepedia.io/submit-tool — ATTENZIONE, non più gratis, ~$197-297
+     a seconda del piano (diverso da quanto segnato in precedenza)
+   - Product Hunt: producthunt.com (submission standard, gratuita)
+   - BotList: da verificare al momento della sottomissione, non trovato un link diretto
+     affidabile in questa ricerca
 4. ~~Pre go-live Violetta: Playwright E2E su develop~~ — COMPLETATO 4GO-22/23/24,
    smoke test admin (35 pagine, login TOTP automatico) attivo, primo run lunedì
    da confermare
