@@ -148,9 +148,16 @@ da riprendere in una sessione dedicata una volta chiuso tutto il resto:
    vero in vercel.json. Le altre differenze sono voci presenti solo su main (ai-visibility,
    social-post — funzionalità non ancora su develop), non errori. Non serve altra azione,
    develop verrà allineato al prossimo cherry-pick.
-3. **Altri webhook con lo stesso pattern**: duffel/webhook e whatsapp/webhook già chiusi
-   (fail-closed, firma verificata). Da controllare se lo stesso difetto (fail-open + confronto
-   non timing-safe) si ripete altrove nel progetto.
+3. ~~Altri webhook con lo stesso pattern~~ — **VERIFICATO E CORRETTO 02/08/2026**: trovati
+   3 webhook con ZERO autenticazione (peggio del fail-open) — vapi/webhook (poteva manipolare
+   lo stato reale di una prenotazione ristorante di un cliente), creatomate/webhook e
+   heygen/webhook (potevano far pubblicare video a piacere sui canali social pubblici reali
+   dell'azienda). Corretti tutti e tre con segreto condiviso WEBHOOK_CALLBACK_SECRET
+   (query string, confronto a tempo costante) — Vapi e HeyGen aggiornati lato pannello esterno
+   da Emi, confermato funzionante. **Creatomate non è attualmente in uso** — il fix resta
+   comunque applicato (innocuo), ma è candidato alla stessa pulizia fatta con cron/gbp-post
+   (rotta morta da rimuovere) in futuro. stripe/webhook e telegram/webhook risultano già
+   protetti correttamente (non riverificati riga per riga, ma nessun'anomalia nella ricerca).
 4. **sharp <0.35.0 — VERIFICATO 02/08/2026: è l'unica vulnerabilità rimasta, "next" non è
    indipendentemente vulnerabile** (next è già alla versione giusta, 15.5.18 — l'audit lo
    segnala solo perché eredita la dipendenza da sharp). PR Dependabot già aperta per sharp
