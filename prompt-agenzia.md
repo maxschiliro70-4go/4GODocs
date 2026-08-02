@@ -150,6 +150,10 @@ da riprendere in una sessione dedicata una volta chiuso tutto il resto:
    su tutto il pubblico, checklist di test da preparare).
 5. **next** — vulnerabilità high pre-esistente, verificare se già risolta dagli aggiornamenti
    recenti (a95c00dd ha portato next a 15.5.18).
+6. **cron/gbp-post è una rotta morta** (trovata 02/08/2026 durante la migrazione vercel.json):
+   non è in vercel.json, nessun chiamante nel codice, admin/cron-status la documenta come
+   "disattivato il 05/07/2026". Candidata alla cancellazione, non serve migrarla alla nuova
+   autenticazione — verificare e rimuovere.
 
 0a. **Duffel webhook — signing secret irrecuperabile da Vercel** (01/08/2026): il secret
     DUFFEL_WEBHOOK_SECRET configurato è confermato corretto (verificato con una sonda HMAC
