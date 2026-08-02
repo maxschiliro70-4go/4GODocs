@@ -129,6 +129,28 @@ Fix applicati in 4GO-23 (main):
    nello stesso momento, verificata con diff esplicito
 
 ## Prossimi step
+
+### Da vedere DOPO il completamento del cherry-pick (raccolti 31/07-02/08/2026)
+Punti trovati e volutamente lasciati da parte durante il cherry-pick/audit di sicurezza,
+da riprendere in una sessione dedicata una volta chiuso tutto il resto:
+
+1. **3 pulsanti admin/sistema non funzionanti da mesi** (401 silenzioso, mai segnalato):
+   `generate-static-maps`, `restore-geodata`, `regeocode-packages`. Toccano i dati geografici
+   dei pacchetti — riattivarli alla cieca dopo mesi di inattività non è sicuro, serve prima
+   capire se il loro comportamento sia ancora corretto prima di farli ripartire. Non toccano
+   le mappe dei viaggi già attivi (verificato: nessuna dipendenza da queste rotte per mappe
+   già generate/servite).
+2. **CRON_REGISTRY disallineato fra main e develop** (in `admin/cron-status`): descrizioni di
+   `gbp-post` diverse, `serp-scraper` con dettagli diversi fra i branch. Prima di fidarsi di
+   questo registry come inventario reale dei cron, va confrontato con la realtà.
+3. **Altri webhook con lo stesso pattern**: duffel/webhook e whatsapp/webhook già chiusi
+   (fail-closed, firma verificata). Da controllare se lo stesso difetto (fail-open + confronto
+   non timing-safe) si ripete altrove nel progetto.
+4. **sharp 0.35.0** — PR Dependabot già aperta, da testare con calma (coinvolge next/image
+   su tutto il pubblico, checklist di test da preparare).
+5. **next** — vulnerabilità high pre-esistente, verificare se già risolta dagli aggiornamenti
+   recenti (a95c00dd ha portato next a 15.5.18).
+
 0a. **Duffel webhook — signing secret irrecuperabile da Vercel** (01/08/2026): il secret
     DUFFEL_WEBHOOK_SECRET configurato è confermato corretto (verificato con una sonda HMAC
     lato server durante il fix della verifica firma — vedi sezione dedicata sotto), ma è
