@@ -1,4 +1,4 @@
-# 4GO FourTravel — Prompt Agenzia (aggiornato 22 Luglio 2026 — 4GO-24 continuazione)
+# 4GO FourTravel — Prompt Agenzia (aggiornato 2 Agosto 2026 — 4GO-24 continuazione)
 
 ## Stato branch
 - **main** `8b13b6c` — produzione
@@ -130,46 +130,80 @@ Fix applicati in 4GO-23 (main):
 
 ## Prossimi step
 
-### Da vedere DOPO il completamento del cherry-pick (raccolti 31/07-02/08/2026)
-Punti trovati e volutamente lasciati da parte durante il cherry-pick/audit di sicurezza,
-da riprendere in una sessione dedicata una volta chiuso tutto il resto:
+### 🔴 Da fare domani, in ordine (rotazione secret — piano già pronto)
+1. **Rotazione MIGRATE_SECRET.** Piano completo già pronto (4 passi, rollback in un
+   minuto): (1) generare il nuovo valore in locale, mai in chat (2) aggiornare
+   il GitHub Secret nei workflow CI *prima* di Vercel (3) aggiornare Vercel Production
+   e redeploy (4) verificare con 4 controlli in sequenza — nuovo valore accettato,
+   vecchio `4go2026` respinto con 401, sessione admin ancora funzionante, primo cron
+   Vercel/cron-job.org passano invariati. Rimandato ieri sera apposta: con clienti
+   veri in viaggio e il flusso ristorante appena andato live, meglio isolare le
+   variabili — un solo cambiamento alla volta nella finestra di osservazione.
+2. **EMAIL_AI_SECRET — bloccato in attesa di conferma.** Protegge almeno due
+   chiamanti esterni diversi: (a) un webhook inbound di Brevo (header
+   `x-webhook-secret`, in `api/email-ai/route.ts`) per le email in arrivo, (b) il
+   cron "PULL IMAP ARUBA 4GO" su cron-job.org (query `?secret=`, polling casella
+   Aruba). Prima di ruotare va trovato dove si configura l'inbound parsing lato
+   Brevo (provato in Settings → SMTP e API, non è lì — solo chiavi SMTP di invio.
+   Da cercare ancora, o chiedere al supporto Brevo dove sta questa impostazione).
+   Ruotare alla cieca senza sapere aggiornare anche il lato Brevo rischia di
+   spegnere silenziosamente l'ingestione email.
+3. **9 file in docs/ con il literal `4go2026`/`4go-ai-2026` ormai obsoleto** —
+   pulizia testuale, nessun rischio, rimasta indietro rispetto al codice (che non
+   contiene più il literal da nessuna parte).
+4. **Collaudo pagamenti Violetta con denaro vero** — quando Emi decide. Piano già
+   pronto: Explorer (piano più economico, evita il ramo "documenti di viaggio"),
+   un pagamento per canale (Stripe poi PayPal), verifica dei 4 punti (record in
+   VioletaSubscription, notifica Telegram, email al cliente, bookingCode
+   funzionante col bot), poi rimborso. **Stripe e PayPal sono entrambi in
+   modalità LIVE** — nessun sandbox disponibile, il collaudo costa denaro vero
+   (interamente rimborsabile lato Stripe, ~€0,35 di commissione fissa non
+   rimborsabile lato PayPal).
 
-1. ~~3 pulsanti admin/sistema non funzionanti da mesi~~ — **INVESTIGATO E CORRETTO 02/08/2026**:
-   erano in realtà 4 sistemi sovrapposti per lo stesso compito (geocodificare le tappe di un
-   pacchetto) con qualità molto diverse: `generate-static-maps` (bug reale — calcolava geoData
-   ma non lo salvava mai, lavoro/costo API sprecato; ora semplificata, solo genera l'immagine
-   mappa), `add-geodata` (funzionante), `restore-geodata` (funzionante, lavora da mapCities),
-   `regeocode-packages` (il più maturo — alias città estere, protezioni contro sovrascritture
-   con geocodifica parziale, preserva punti attrazione, invalida cache). Causa radice del 401
-   su tutti e quattro: le pagine admin non mandavano mai il secret nel modo atteso — contavano
-   sulla sessione, mai riconosciuta prima dell'helper condiviso. Unificata l'autenticazione su
-   tutti e quattro, nessuna modifica alle pagine chiamanti necessaria (fetch same-origin, il
-   cookie di sessione viaggia da solo).
-2. ~~CRON_REGISTRY disallineato fra main e develop~~ — **VERIFICATO 02/08/2026**: l'unica
-   divergenza reale era `gbp-post` (develop descriveva il vecchio sistema manuale ormai
-   sostituito — coerente, dato che develop non è stato toccato dalla rimozione della vecchia
-   rotta). `serp-scraper` risultava identico, non era una divergenza vera. Confermato che
-   `main` (quello che conta per il monitoraggio reale) è accurato, incrociato con lo schedule
-   vero in vercel.json. Le altre differenze sono voci presenti solo su main (ai-visibility,
-   social-post — funzionalità non ancora su develop), non errori. Non serve altra azione,
-   develop verrà allineato al prossimo cherry-pick.
-3. ~~Altri webhook con lo stesso pattern~~ — **VERIFICATO E CORRETTO 02/08/2026**: trovati
-   3 webhook con ZERO autenticazione (peggio del fail-open) — vapi/webhook (poteva manipolare
-   lo stato reale di una prenotazione ristorante di un cliente), creatomate/webhook e
-   heygen/webhook (potevano far pubblicare video a piacere sui canali social pubblici reali
-   dell'azienda). Corretti tutti e tre con segreto condiviso WEBHOOK_CALLBACK_SECRET
-   (query string, confronto a tempo costante) — Vapi e HeyGen aggiornati lato pannello esterno
-   da Emi, confermato funzionante. **Creatomate non è attualmente in uso** — il fix resta
-   comunque applicato (innocuo), ma è candidato alla stessa pulizia fatta con cron/gbp-post
-   (rotta morta da rimuovere) in futuro. stripe/webhook e telegram/webhook risultano già
-   protetti correttamente (non riverificati riga per riga, ma nessun'anomalia nella ricerca).
-4. **sharp <0.35.0 — VERIFICATO 02/08/2026: è l'unica vulnerabilità rimasta, "next" non è
-   indipendentemente vulnerabile** (next è già alla versione giusta, 15.5.18 — l'audit lo
-   segnala solo perché eredita la dipendenza da sharp). PR Dependabot già aperta per sharp
-   0.35.3, da testare con calma (breaking change, coinvolge next/image su tutto il pubblico,
-   checklist di test da preparare). Risolvendo sharp si chiudono entrambe le voci insieme.
-5. ~~cron/gbp-post è una rotta morta~~ — **RIMOSSA 02/08/2026**, verificato nessun chiamante
-   e nessun riferimento in vercel.json prima della cancellazione.
+### Monitorare nei prossimi giorni
+- **Flusso ristorante "Violetta chiama per te"** — andato in produzione il
+  02/08/2026 senza collaudo interno diretto (impossibile farlo — nessun modo
+  pratico di impersonare un cliente). Protetto da 5 reti di sicurezza (uscita
+  "annulla" funzionante, escalation su fallimento Vapi, contatore tentativi,
+  cattura eccezioni impreviste, cron ogni 30 min che segnala sessioni ferme).
+  **Nuovo pannello di monitoraggio**: `/admin/social` → tab "🍽 Flusso
+  Ristorante" — sessioni in corso ora + storico completo con esito finale
+  (prima l'esito veniva perso per sempre, mai salvato). I messaggi `notifyAll`
+  su Telegram restano il segnale più immediato; il testo dell'errore o il nome
+  del passo che si ripete più volte è l'indizio più utile per capire cosa
+  correggere.
+- **Gap `interpreteAttivo` colmato solo su `main`, non su tutto `develop`** —
+  verificato allineato durante il port, ma vale un controllo se emergono
+  incoerenze future tra i due branch su questo file specifico
+  (`telegram/webhook/route.ts`, enorme e modificato spesso da entrambi i lati).
+
+### Chiuso il 02/08/2026 (per riferimento, non richiede più azione)
+- ~~3 pulsanti admin/sistema non funzionanti da mesi~~ — investigati: erano 4
+  sistemi di geocodifica sovrapposti, uno con un bug reale (calcolava geoData ma
+  non lo salvava mai). Unificata l'autenticazione su tutti e quattro.
+- ~~CRON_REGISTRY disallineato~~ — verificato, main accurato, unica divergenza
+  reale (`gbp-post`) coerente col fatto che develop non aveva ricevuto quella
+  rimozione.
+- ~~Altri webhook con lo stesso pattern fail-open~~ — trovati 3 webhook con
+  **ZERO** autenticazione (peggio del fail-open): `vapi/webhook` (poteva
+  manipolare lo stato di una prenotazione ristorante reale), `creatomate/webhook`
+  e `heygen/webhook` (potevano pubblicare video a piacere sui canali social
+  pubblici reali). Corretti tutti e tre con `WEBHOOK_CALLBACK_SECRET` — Vapi e
+  HeyGen aggiornati lato pannello esterno, confermato funzionante. Creatomate non
+  è in uso, resta come rotta morta candidata alla rimozione.
+- ~~sharp/next~~ — confermato: unico problema è sharp <0.35.0, "next" non è
+  indipendentemente vulnerabile. PR Dependabot aperta, da testare con calma
+  separatamente (breaking change, tocca next/image su tutto il pubblico).
+- ~~cron/gbp-post rotta morta~~ — rimossa.
+- ~~Fase C (rotazione secret) — punti 1 e 2~~ — completati: `4go2026` non
+  esiste più in nessuna riga di codice, `vercel.json`, workflow CI o job
+  cron-job.org. `SEGRETI_STORICI` nell'helper svuotato. Resta solo il punto 3
+  qui sopra (la rotazione vera del valore su Vercel).
+- ~~Gap `interpreteAttivo` mai controllato in chat su main~~ — colmato in due
+  pezzi: il bottone "🌐 Interprete" e il flusso completo "Violetta chiama il
+  ristorante" (con le 5 reti di sicurezza), entrambi portati da develop a main.
+- ~~Sezione "Workflow CI" mancante su main~~ — portata da staging (lancio
+  manuale test E2E/security-scan, pulizia dati test).
 
 0a. **Duffel webhook — signing secret irrecuperabile da Vercel** (01/08/2026): il secret
     DUFFEL_WEBHOOK_SECRET configurato è confermato corretto (verificato con una sonda HMAC
@@ -206,10 +240,12 @@ da riprendere in una sessione dedicata una volta chiuso tutto il resto:
    threads.ts, googleServiceAuth.ts) — develop è indietro su queste integrazioni lavorate
    di recente su main, va portato solo codice nuovo, mai sovrascritta una versione più vecchia.
    **ULTIMO STEP dopo il cherry-pick completo** (promemoria esplicito di Emi, 31/07/2026):
-   rimuovere il `noindex` da TUTTE le pagine Violetta-correlate (non solo /demo-bot e
-   /violetta) e spingere attivamente su SEO, AEO (AI answer engines — Perplexity/Claude/
-   Gemini, vedi lavoro FAQ città del 22/07) e GEO (generative engine optimization) — non
-   limitarsi a togliere il blocco, promuovere attivamente la visibilità una volta live
+   ~~rimuovere il `noindex` da TUTTE le pagine Violetta-correlate~~ — **FATTO 01/08/2026**:
+   tolto da `/demo-bot` e `/violetta` (quest'ultimo era già un file orfano mai realmente
+   in vigore), entrambe sottomesse a Search Console e confermate indicizzate. Resta da
+   fare: spingere attivamente su SEO, AEO (AI answer engines — Perplexity/Claude/
+   Gemini, vedi lavoro FAQ città del 22/07) e GEO (generative engine optimization) —
+   non limitarsi ad aver tolto il blocco, promuovere attivamente la visibilità ora che è live
 3. **Alla conferma SIAE, esplicitamente autorizzata da Emi**: cherry-pick massiccio
    develop→main di tutto l'arretrato accumulato (fix pagamenti 24/6 — Stripe year
    undefined, VioletaSubscription idempotency, PayPal validation, parser importi IT
@@ -1130,3 +1166,116 @@ richiesta, classificazione corretta ma scartata dal codice. Vale la pena, nei
 prossimi controlli, guardare sempre se il dato "sbagliato" esiste comunque da
 qualche parte nei documenti/nel codice prima di dedurre che sia inventato di
 sana pianta — la causa e il fix sono diversi nei due casi.
+
+## Sessione 31 Luglio - 2 Agosto 2026 (4GO-24, due giornate intense — cherry-pick + audit sicurezza completo)
+
+Sessione lunghissima, partita come cherry-pick develop→main post-SIAE e diventata anche
+un audit di sicurezza completo del progetto. Riepilogo per aree, non cronologico — i
+dettagli tecnici di ogni fix sono nella sezione "Prossimi step" più sopra dove rilevante.
+
+### Gruppo 1 — Interprete/Ristorante Concierge Vapi: COMPLETO
+Portato da develop a main in più passaggi:
+- Rate limiting rotto su tutte le rotte Vapi/cron (bug di firma: mancava il parametro
+  della finestra temporale, bloccava gli IP permanentemente) — corretto ovunque.
+- `vapi-utils.ts`: 13 stringhe con apostrofi non escapati (607 errori sintattici),
+  27 chiavi duplicate, gender non dichiarato per giapponese/arabo — tutto risolto.
+  Template russo (`ru`) portato correttamente su entrambi i branch (era stato aggiunto
+  solo su main in un fix precedente, rischiava di essere cancellato da un checkout
+  ingenuo — stessa identica trappola vista più volte durante la sessione).
+- **Bottone "🌐 Interprete"** e **flusso completo "Violetta chiama il ristorante"**:
+  mancavano interamente da main (0 occorrenze di `interpreteAttivo` contro le 5 di
+  develop) — un cliente Concierge pagante non riceveva alcuna differenza reale rispetto
+  a Explorer. Scoperto e colmato il 02/08, proprio nei giorni in cui Emi ha regalato
+  l'interprete a tutti i clienti in viaggio in quel momento. Portato con **5 reti di
+  sicurezza** aggiunte contestualmente (non collaudo interno possibile — nessun modo
+  pratico di impersonare un cliente):
+  1. Uscita "annulla" funzionante (il bottone c'era ma il confronto testuale non
+     combaciava mai per via dell'emoji).
+  2. Escalation a un operatore se la chiamata Vapi fallisce (prima: silenzio totale,
+     proprio dopo che il cliente aveva confermato).
+  3. Contatore tentativi — dopo 3 input non riconosciuti sullo stesso passo, si esce
+     verso un operatore invece di un loop infinito.
+  4. `try/catch` globale sull'intera macchina a stati — qualunque eccezione imprevista
+     diventa un'escalation, non un 500 (che Telegram ritenterebbe all'infinito).
+  5. Cron `sessioni-bloccate` (ogni 30 min) — segnala sessioni ferme da oltre 30 minuti,
+     l'unico modo di accorgersi di un blocco che nessuna rete precedente ha previsto.
+     LangSmith non vede nulla di questo: riceve solo le chiamate al modello, e questa
+     macchina a stati intercetta i messaggi prima di arrivarci.
+  Trovato durante il port anche un bug reale indipendente: `mapsKey` non dichiarata nel
+  ramo `confirm_location`, `ReferenceError` per chiunique scrivesse un indirizzo invece
+  di mandare il GPS — corretto su entrambi i branch.
+- **Nuovo — monitoraggio completo**: prima l'esito finale della chiamata (confermata,
+  rifiutata, nessuna risposta) veniva calcolato solo per il messaggio al cliente e poi
+  perso per sempre. Aggiunto modello `RestaurantFlowLog` che traccia l'intero percorso
+  dall'avvio della chiamata Vapi fino all'esito. Pannello in `/admin/social` → tab
+  "🍽 Flusso Ristorante": sessioni in corso ora + storico filtrabile per esito,
+  aggiornamento automatico ogni 30s.
+- Bug di sicurezza scoperti durante l'analisi: `ai/quiz/route.ts` e 5 rotte pubbliche
+  senza rate limiting — tutte sistemate.
+
+### Gruppo 2 — Pagamenti Violetta commerciale: CODICE PRONTO, collaudo rimandato
+- 3 bug bloccanti corretti prima del porting: vincoli univoci mancanti su
+  `stripeSessionId`/`paypalOrderId` (avrebbe fatto incassare pagamenti senza mai creare
+  l'abbonamento — errore Postgres 42P10 inghiottito silenziosamente), gate PayPal che
+  richiedeva un `code` inesistente per il ramo Violetta (pagamento incassato e scartato),
+  segreto/sanitizzazione mancanti su `violetta-checkout`.
+- Porting dei 5 pezzi (endpoint checkout, blocco Violetta in `stripe/webhook`, ramo
+  Violetta + fix del gate in `paypal/capture`, gestione abbonamenti admin) — verificato
+  che main non perdesse lavoro proprio (commento `// Generate bookingCode` preservato).
+- `admin/violetta-sub` non aveva controllo di autorizzazione proprio (coperto solo dal
+  middleware) — aggiunto esplicitamente per non restare nudo se il middleware cambiasse.
+- **Collaudo con pagamento reale non ancora fatto** — rimandato da Emi. Sia Stripe che
+  PayPal sono confermati in modalità LIVE (nessun sandbox disponibile), quindi il
+  collaudo costerà denaro vero quando verrà fatto.
+
+### Gruppo 3 — Landing Violetta commerciale: COMPLETO
+Portato interamente, con attenzione particolare ai 5 file condivisi che main aveva
+evoluto autonomamente (30+ commit di messa a punto solo sul beep audio del
+ChatWidget, fix LCP su HeroSection, PreventivoModal precompilato su TravelQuiz) — questi
+NON sono stati sovrascritti da develop, sarebbe stata una regressione. Applicate solo le
+modifiche mirate genuinamente nuove (link Violetta in navbar, testo di benvenuto
+aggiornato, la pagina `/violetta` completa 159→768 righe). `noindex` rimosso da
+`/violetta` e `/demo-bot`, entrambe sottomesse a Search Console e confermate indicizzate.
+
+### Audit di sicurezza — rotazione secret condivisi
+Scoperta iniziale: `4go2026` (letteralmente scritto nel codice) era leggibile da
+chiunque nel bundle JavaScript pubblico servito da 13 pagine admin — non un secret
+"esposto in chat", un secret pubblico su internet da quando quelle pagine sono online.
+- Costruito un helper di autorizzazione condiviso (`src/lib/apiAuth.ts`) che accetta
+  Bearer/header/query/sessione, sostituendo ~106 controlli scritti a mano e divergenti.
+- Migrati in tre fasi: (A) le rotte imparano il nuovo meccanismo restando compatibili
+  col vecchio, (B) i chiamanti (9 job cron-job.org, `vercel.json` con 28 voci, pagine
+  admin, chiamate server→server, CI) smettono di mandare il literal, (C) il literal
+  smette di essere accettato ovunque nel codice.
+- **Fase C completata nel codice** — `4go2026`/`4go-ai-2026` non esistono più in
+  nessuna riga, non sono più accettati da nessuna parte. **Resta solo la rotazione vera
+  del valore su Vercel**, rimandata a domani per isolare le variabili (vedi sezione
+  "Prossimi step" sopra per il piano completo).
+- **Scoperta più seria della sessione**: verificando "altri webhook con lo stesso
+  pattern", trovati 3 webhook con **zero** autenticazione (non solo debole) —
+  `vapi/webhook` poteva far scrivere a un cliente reale che la sua prenotazione era
+  confermata quando non lo era; `creatomate/webhook` e `heygen/webhook` potevano far
+  pubblicare video a piacere sui canali social pubblici reali dell'azienda. Corretti
+  tutti e tre con un nuovo secret condiviso (`WEBHOOK_CALLBACK_SECRET`).
+- Gate di sessione del middleware verificava solo l'*esistenza* del cookie, mai la sua
+  validità — chiunque poteva superare il gate `/api/admin/*` con un cookie inventato.
+  Riparato con `getToken` di NextAuth, verificato NEXTAUTH_SECRET/ADMIN_PASSWORD/
+  ADMIN_TOTP_SECRET tutte impostate su Vercel (nessun fallback pericoloso attivo).
+- 4 rotte di geocodifica pacchetti (sovrapposte, qualità molto diverse) sistemate
+  insieme all'autenticazione — trovato un bug reale in una di esse (geoData calcolato
+  ma mai salvato, sprecava chiamate API a pagamento).
+
+### Lezioni operative della sessione (per il futuro)
+- **Se `git push` resta muto senza errori mentre `git ls-remote` risponde subito**: è
+  quasi certamente una VPN o un proxy che tronca upload di dimensioni consistenti.
+  Disattivare la VPN risolve.
+- **Confronto contro la merge-base può dare falsi allarmi** dove il confronto diretto
+  main↔develop dice il vero: se due branch hanno applicato la stessa correzione
+  separatamente, divergono entrambi dalla base comune ma sono identici tra loro — è
+  quest'ultimo confronto quello che conta prima di un `checkout`.
+- File condivisi enormi e modificati spesso da entrambe le parti (`telegram/webhook/
+  route.ts`, `vapi-utils.ts`) vanno sempre trattati con estrazione chirurgica, mai
+  `checkout` diretto — verificato più volte che main avesse lavoro proprio da preservare.
+- Quando un secret protegge più chiamanti esterni di tipo diverso (webhook inbound +
+  cron esterni), la rotazione richiede aggiornare *tutti* i lati contemporaneamente —
+  non ruotare mai senza prima aver censito con certezza chi chiama dall'esterno.
