@@ -140,9 +140,14 @@ da riprendere in una sessione dedicata una volta chiuso tutto il resto:
    capire se il loro comportamento sia ancora corretto prima di farli ripartire. Non toccano
    le mappe dei viaggi già attivi (verificato: nessuna dipendenza da queste rotte per mappe
    già generate/servite).
-2. **CRON_REGISTRY disallineato fra main e develop** (in `admin/cron-status`): descrizioni di
-   `gbp-post` diverse, `serp-scraper` con dettagli diversi fra i branch. Prima di fidarsi di
-   questo registry come inventario reale dei cron, va confrontato con la realtà.
+2. ~~CRON_REGISTRY disallineato fra main e develop~~ — **VERIFICATO 02/08/2026**: l'unica
+   divergenza reale era `gbp-post` (develop descriveva il vecchio sistema manuale ormai
+   sostituito — coerente, dato che develop non è stato toccato dalla rimozione della vecchia
+   rotta). `serp-scraper` risultava identico, non era una divergenza vera. Confermato che
+   `main` (quello che conta per il monitoraggio reale) è accurato, incrociato con lo schedule
+   vero in vercel.json. Le altre differenze sono voci presenti solo su main (ai-visibility,
+   social-post — funzionalità non ancora su develop), non errori. Non serve altra azione,
+   develop verrà allineato al prossimo cherry-pick.
 3. **Altri webhook con lo stesso pattern**: duffel/webhook e whatsapp/webhook già chiusi
    (fail-closed, firma verificata). Da controllare se lo stesso difetto (fail-open + confronto
    non timing-safe) si ripete altrove nel progetto.
