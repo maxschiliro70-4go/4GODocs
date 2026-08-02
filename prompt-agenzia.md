@@ -134,12 +134,17 @@ Fix applicati in 4GO-23 (main):
 Punti trovati e volutamente lasciati da parte durante il cherry-pick/audit di sicurezza,
 da riprendere in una sessione dedicata una volta chiuso tutto il resto:
 
-1. **3 pulsanti admin/sistema non funzionanti da mesi** (401 silenzioso, mai segnalato):
-   `generate-static-maps`, `restore-geodata`, `regeocode-packages`. Toccano i dati geografici
-   dei pacchetti — riattivarli alla cieca dopo mesi di inattività non è sicuro, serve prima
-   capire se il loro comportamento sia ancora corretto prima di farli ripartire. Non toccano
-   le mappe dei viaggi già attivi (verificato: nessuna dipendenza da queste rotte per mappe
-   già generate/servite).
+1. ~~3 pulsanti admin/sistema non funzionanti da mesi~~ — **INVESTIGATO E CORRETTO 02/08/2026**:
+   erano in realtà 4 sistemi sovrapposti per lo stesso compito (geocodificare le tappe di un
+   pacchetto) con qualità molto diverse: `generate-static-maps` (bug reale — calcolava geoData
+   ma non lo salvava mai, lavoro/costo API sprecato; ora semplificata, solo genera l'immagine
+   mappa), `add-geodata` (funzionante), `restore-geodata` (funzionante, lavora da mapCities),
+   `regeocode-packages` (il più maturo — alias città estere, protezioni contro sovrascritture
+   con geocodifica parziale, preserva punti attrazione, invalida cache). Causa radice del 401
+   su tutti e quattro: le pagine admin non mandavano mai il secret nel modo atteso — contavano
+   sulla sessione, mai riconosciuta prima dell'helper condiviso. Unificata l'autenticazione su
+   tutti e quattro, nessuna modifica alle pagine chiamanti necessaria (fetch same-origin, il
+   cookie di sessione viaggia da solo).
 2. ~~CRON_REGISTRY disallineato fra main e develop~~ — **VERIFICATO 02/08/2026**: l'unica
    divergenza reale era `gbp-post` (develop descriveva il vecchio sistema manuale ormai
    sostituito — coerente, dato che develop non è stato toccato dalla rimozione della vecchia
