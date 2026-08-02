@@ -146,14 +146,13 @@ da riprendere in una sessione dedicata una volta chiuso tutto il resto:
 3. **Altri webhook con lo stesso pattern**: duffel/webhook e whatsapp/webhook già chiusi
    (fail-closed, firma verificata). Da controllare se lo stesso difetto (fail-open + confronto
    non timing-safe) si ripete altrove nel progetto.
-4. **sharp 0.35.0** — PR Dependabot già aperta, da testare con calma (coinvolge next/image
-   su tutto il pubblico, checklist di test da preparare).
-5. **next** — vulnerabilità high pre-esistente, verificare se già risolta dagli aggiornamenti
-   recenti (a95c00dd ha portato next a 15.5.18).
-6. **cron/gbp-post è una rotta morta** (trovata 02/08/2026 durante la migrazione vercel.json):
-   non è in vercel.json, nessun chiamante nel codice, admin/cron-status la documenta come
-   "disattivato il 05/07/2026". Candidata alla cancellazione, non serve migrarla alla nuova
-   autenticazione — verificare e rimuovere.
+4. **sharp <0.35.0 — VERIFICATO 02/08/2026: è l'unica vulnerabilità rimasta, "next" non è
+   indipendentemente vulnerabile** (next è già alla versione giusta, 15.5.18 — l'audit lo
+   segnala solo perché eredita la dipendenza da sharp). PR Dependabot già aperta per sharp
+   0.35.3, da testare con calma (breaking change, coinvolge next/image su tutto il pubblico,
+   checklist di test da preparare). Risolvendo sharp si chiudono entrambe le voci insieme.
+5. ~~cron/gbp-post è una rotta morta~~ — **RIMOSSA 02/08/2026**, verificato nessun chiamante
+   e nessun riferimento in vercel.json prima della cancellazione.
 
 0a. **Duffel webhook — signing secret irrecuperabile da Vercel** (01/08/2026): il secret
     DUFFEL_WEBHOOK_SECRET configurato è confermato corretto (verificato con una sonda HMAC
