@@ -130,6 +130,17 @@ Fix applicati in 4GO-23 (main):
 
 ## Prossimi step
 
+### 💰 Verificare modello di fatturazione Claude Code (costo ~€500 in un giorno, 02/08/2026)
+Sospetto concreto da verificare: se sul PC è impostata la variabile d'ambiente
+`ANTHROPIC_API_KEY` (probabile, dato che il progetto 4GO la usa ovunque per Violetta),
+Claude Code potrebbe autenticarsi automaticamente con quella invece che con un eventuale
+abbonamento Pro/Max, facendo pagare a consumo (token per token) anche avendo già un
+piano fisso attivo — problema noto e documentato, capita spesso senza che l'utente se ne
+accorga. Verifica: `claude logout` poi riautenticarsi solo con le credenziali Claude.ai
+(Pro/Max), senza lasciare la chiave API come fallback. Se non c'è già un abbonamento Max
+attivo, valutare — con il ritmo di lavoro di queste sessioni, un prezzo fisso mensile
+(Max: $100-200/mese) sembra più indicato del pagamento a consumo puro.
+
 ### 🔴 Da fare domani, in ordine (rotazione secret — piano già pronto)
 1. **Rotazione MIGRATE_SECRET.** Piano completo già pronto (4 passi, rollback in un
    minuto): (1) generare il nuovo valore in locale, mai in chat (2) aggiornare
