@@ -1,4 +1,4 @@
-# 4GO FourTravel — Prompt Agenzia (aggiornato 2 Agosto 2026 — 4GO-24 continuazione)
+# 4GO FourTravel — Prompt Agenzia (aggiornato 8 Agosto 2026 — 4GO-24 continuazione)
 
 ## Stato branch
 - **main** `8b13b6c` — produzione
@@ -130,180 +130,170 @@ Fix applicati in 4GO-23 (main):
 
 ## Prossimi step
 
-### 💰 Verificare modello di fatturazione Claude Code (costo ~€500 in un giorno, 02/08/2026)
-Sospetto concreto da verificare: se sul PC è impostata la variabile d'ambiente
-`ANTHROPIC_API_KEY` (probabile, dato che il progetto 4GO la usa ovunque per Violetta),
-Claude Code potrebbe autenticarsi automaticamente con quella invece che con un eventuale
-abbonamento Pro/Max, facendo pagare a consumo (token per token) anche avendo già un
-piano fisso attivo — problema noto e documentato, capita spesso senza che l'utente se ne
-accorga. Verifica: `claude logout` poi riautenticarsi solo con le credenziali Claude.ai
-(Pro/Max), senza lasciare la chiave API come fallback. Se non c'è già un abbonamento Max
-attivo, valutare — con il ritmo di lavoro di queste sessioni, un prezzo fisso mensile
-(Max: $100-200/mese) sembra più indicato del pagamento a consumo puro.
+### 🔴 Rotazione secret — ancora da fare (rimandata più volte, piano pronto)
+1. **Rotazione MIGRATE_SECRET.** Piano completo pronto da giorni (4 passi, rollback in un
+   minuto): generare nuovo valore in locale → aggiornare GitHub Secret nei workflow CI
+   *prima* di Vercel → aggiornare Vercel Production e redeploy → verificare (nuovo valore
+   accettato, vecchio `4go2026` respinto con 401, sessione admin ancora funzionante, cron
+   passano invariati). Rimandata più volte per isolare le variabili durante gli altri
+   problemi affrontati (flusso ristorante, poi instabilità database) — nessun impedimento
+   tecnico, solo prudenza nel non sommare troppi cambiamenti insieme.
+2. **EMAIL_AI_SECRET — bloccato in attesa di conferma.** Protegge un webhook inbound
+   Brevo + il cron "PULL IMAP ARUBA 4GO" su cron-job.org. Non ancora trovato dove si
+   configura l'inbound parsing lato Brevo (non è in Settings → SMTP e API, solo chiavi
+   di invio) — da chiedere al supporto Brevo.
+3. **9 file in docs/ con il literal `4go2026` ormai obsoleto** — pulizia testuale, nessun
+   rischio.
+4. **Collaudo pagamenti Violetta con denaro vero** — ancora rimandato da Emi. Piano
+   pronto (Explorer, un pagamento per canale, verifica 4 punti, rimborso). Stripe/PayPal
+   in modalità LIVE, nessun sandbox.
 
-### 🔴 Da fare domani, in ordine (rotazione secret — piano già pronto)
-1. **Rotazione MIGRATE_SECRET.** Piano completo già pronto (4 passi, rollback in un
-   minuto): (1) generare il nuovo valore in locale, mai in chat (2) aggiornare
-   il GitHub Secret nei workflow CI *prima* di Vercel (3) aggiornare Vercel Production
-   e redeploy (4) verificare con 4 controlli in sequenza — nuovo valore accettato,
-   vecchio `4go2026` respinto con 401, sessione admin ancora funzionante, primo cron
-   Vercel/cron-job.org passano invariati. Rimandato ieri sera apposta: con clienti
-   veri in viaggio e il flusso ristorante appena andato live, meglio isolare le
-   variabili — un solo cambiamento alla volta nella finestra di osservazione.
-2. **EMAIL_AI_SECRET — bloccato in attesa di conferma.** Protegge almeno due
-   chiamanti esterni diversi: (a) un webhook inbound di Brevo (header
-   `x-webhook-secret`, in `api/email-ai/route.ts`) per le email in arrivo, (b) il
-   cron "PULL IMAP ARUBA 4GO" su cron-job.org (query `?secret=`, polling casella
-   Aruba). Prima di ruotare va trovato dove si configura l'inbound parsing lato
-   Brevo (provato in Settings → SMTP e API, non è lì — solo chiavi SMTP di invio.
-   Da cercare ancora, o chiedere al supporto Brevo dove sta questa impostazione).
-   Ruotare alla cieca senza sapere aggiornare anche il lato Brevo rischia di
-   spegnere silenziosamente l'ingestione email.
-3. **9 file in docs/ con il literal `4go2026`/`4go-ai-2026` ormai obsoleto** —
-   pulizia testuale, nessun rischio, rimasta indietro rispetto al codice (che non
-   contiene più il literal da nessuna parte).
-4. **Collaudo pagamenti Violetta con denaro vero** — quando Emi decide. Piano già
-   pronto: Explorer (piano più economico, evita il ramo "documenti di viaggio"),
-   un pagamento per canale (Stripe poi PayPal), verifica dei 4 punti (record in
-   VioletaSubscription, notifica Telegram, email al cliente, bookingCode
-   funzionante col bot), poi rimborso. **Stripe e PayPal sono entrambi in
-   modalità LIVE** — nessun sandbox disponibile, il collaudo costa denaro vero
-   (interamente rimborsabile lato Stripe, ~€0,35 di commissione fissa non
-   rimborsabile lato PayPal).
+### 💰 Fatturazione Claude Code — CHIARITO 08/08/2026
+Non era un problema da correggere: Emi ha un Max personale (€90+IVA/mese) usato per
+altri scopi, ma Claude Code su questo progetto si autentica **deliberatamente** con la
+chiave API di Massimo — l'agenzia sostiene il costo dello sviluppo consapevolmente,
+non un errore di configurazione. Nessuna azione necessaria su questo fronte. Resta
+aperta la domanda se convenga passare da chiave API a consumo a un piano Team
+intestato all'organizzazione (numeri presentati: posto Premium $100/mese con 6,25x
+l'uso di Pro batte Max 20x $200/mese se non serve il tetto massimo assoluto) — nessuna
+decisione presa, da riprendere quando Massimo vuole valutarlo.
+
+### 🗄️ Instabilità database Neon — INDAGATA A FONDO E MITIGATA 08/08/2026
+Giornata con **4 episodi P1001** ("Can't reach database server") in un solo giorno
+(09:00, 18:00, 21:00 + uno il 3/08), tutti risolti da soli entro pochi minuti ma con
+impatto reale su clienti (conversazioni Telegram rimaste senza risposta per ore).
+
+**Ipotesi escluse durante l'indagine:**
+- Blip regionale Neon — status page mostra "Operational" per eu-central-1 in tutte
+  le date coinvolte, nessun incidente pubblico corrispondente
+- Troppe connessioni simultanee — aggiunto `pgbouncer=true&connection_limit=1` alla
+  stringa di connessione (con `channel_binding=require` mantenuto, copiato
+  direttamente dalla console Neon) — non ha risolto da solo
+- Risveglio a freddo (scale-to-zero) — **era la causa vera**: lo scale-to-zero era
+  attivo (sospensione dopo 5 minuti di inattività), e i tempi di risveglio riportati
+  da Neon a volte superavano il timeout di 8s usato dall'health-check
+
+**Fix applicati:**
+1. `src/lib/db.ts` — il client Prisma ora viene sempre riutilizzato tra invocazioni,
+   anche in produzione (prima il riuso era disattivato apposta in produzione,
+   probabilmente per evitare connessioni stantie tra cold start — ma per Vercel
+   serverless il supporto Neon conferma che va fatto l'esatto contrario).
+   Raccomandazione diretta ricevuta dal supporto Neon via ticket.
+2. **Scale-to-zero disattivato** sul progetto Neon (dashboard → Branches → production
+   → Computes → Edit primary compute → "Scale to zero" OFF). Il compute resta sempre
+   attivo, eliminando il rischio di risveglio a freddo. **Verificare il prossimo
+   fattura Neon** — il compute sempre acceso probabilmente costa di più del prima,
+   nessun numero ancora disponibile.
+3. Aggiunta notifica Telegram con l'errore reale quando `blog-fix-images` fallisce
+   (prima l'errore finiva solo in una risposta JSON invisibile per un cron
+   automatico) — utile andare a vedere se ricapita.
+
+**Stato al termine della sessione**: ~11 ore senza nuovi episodi dopo la disattivazione
+dello scale-to-zero — segnale incoraggiante ma non ancora conclusivo (serve 24-48h
+pulite per confermare con più sicurezza). Ticket aperto con il supporto Neon con tutti
+e 4 gli episodi documentati, in attesa di risposta ulteriore se il problema dovesse
+ripresentarsi nonostante il fix.
 
 ### Monitorare nei prossimi giorni
-- **Flusso ristorante "Violetta chiama per te"** — andato in produzione il
-  02/08/2026 senza collaudo interno diretto (impossibile farlo — nessun modo
-  pratico di impersonare un cliente). Protetto da 5 reti di sicurezza (uscita
-  "annulla" funzionante, escalation su fallimento Vapi, contatore tentativi,
-  cattura eccezioni impreviste, cron ogni 30 min che segnala sessioni ferme).
-  **Nuovo pannello di monitoraggio**: `/admin/social` → tab "🍽 Flusso
-  Ristorante" — sessioni in corso ora + storico completo con esito finale
-  (prima l'esito veniva perso per sempre, mai salvato). I messaggi `notifyAll`
-  su Telegram restano il segnale più immediato; il testo dell'errore o il nome
-  del passo che si ripete più volte è l'indizio più utile per capire cosa
-  correggere.
-- **Gap `interpreteAttivo` colmato solo su `main`, non su tutto `develop`** —
-  verificato allineato durante il port, ma vale un controllo se emergono
-  incoerenze future tra i due branch su questo file specifico
-  (`telegram/webhook/route.ts`, enorme e modificato spesso da entrambi i lati).
+- **Stabilità database** dopo la disattivazione dello scale-to-zero (vedi sopra) — se
+  ricapitano episodi P1001 nonostante il fix, il ticket Neon resta aperto per
+  approfondire ulteriormente
+- **Costo Neon** — controllare la prossima fattura per l'impatto dello scale-to-zero
+  disattivato
+- **Flusso ristorante "Violetta chiama per te"** — in produzione dal 02/08/2026 con
+  5 reti di sicurezza, monitorabile su `/admin/social` → tab "🍽 Flusso Ristorante"
+- **`[BLOG-DUPCHECK]` nei log Vercel** — log diagnostico aggiunto il 07/08 per capire
+  perché le foto duplicate del blog riappaiono ogni giorno nonostante la pulizia
+  quotidiana (sospetto: race condition tra `blog-autogen` e `blog-reimage`, o più
+  probabilmente solo un fenomeno di scala — pool di immagini uniche sempre più raro
+  con oltre 700 articoli e temi ricorrenti)
 
-### Chiuso il 02/08/2026 (per riferimento, non richiede più azione)
-- ~~3 pulsanti admin/sistema non funzionanti da mesi~~ — investigati: erano 4
-  sistemi di geocodifica sovrapposti, uno con un bug reale (calcolava geoData ma
-  non lo salvava mai). Unificata l'autenticazione su tutti e quattro.
-- ~~CRON_REGISTRY disallineato~~ — verificato, main accurato, unica divergenza
-  reale (`gbp-post`) coerente col fatto che develop non aveva ricevuto quella
-  rimozione.
-- ~~Altri webhook con lo stesso pattern fail-open~~ — trovati 3 webhook con
-  **ZERO** autenticazione (peggio del fail-open): `vapi/webhook` (poteva
-  manipolare lo stato di una prenotazione ristorante reale), `creatomate/webhook`
-  e `heygen/webhook` (potevano pubblicare video a piacere sui canali social
-  pubblici reali). Corretti tutti e tre con `WEBHOOK_CALLBACK_SECRET` — Vapi e
-  HeyGen aggiornati lato pannello esterno, confermato funzionante. Creatomate non
-  è in uso, resta come rotta morta candidata alla rimozione.
-- ~~sharp/next~~ — confermato: unico problema è sharp <0.35.0, "next" non è
-  indipendentemente vulnerabile. PR Dependabot aperta, da testare con calma
-  separatamente (breaking change, tocca next/image su tutto il pubblico).
-- ~~cron/gbp-post rotta morta~~ — rimossa.
-- ~~Fase C (rotazione secret) — punti 1 e 2~~ — completati: `4go2026` non
-  esiste più in nessuna riga di codice, `vercel.json`, workflow CI o job
-  cron-job.org. `SEGRETI_STORICI` nell'helper svuotato. Resta solo il punto 3
-  qui sopra (la rotazione vera del valore su Vercel).
-- ~~Gap `interpreteAttivo` mai controllato in chat su main~~ — colmato in due
-  pezzi: il bottone "🌐 Interprete" e il flusso completo "Violetta chiama il
-  ristorante" (con le 5 reti di sicurezza), entrambi portati da develop a main.
-- ~~Sezione "Workflow CI" mancante su main~~ — portata da staging (lancio
-  manuale test E2E/security-scan, pulizia dati test).
+### 🐛 Bug reali corretti l'8 agosto tramite revisione conversazioni LangSmith
+Giornata dedicata quasi interamente alla revisione di conversazioni reali con clienti,
+producendo una lunga serie di correzioni concrete al comportamento di Violetta:
 
-0a. **Duffel webhook — signing secret irrecuperabile da Vercel** (01/08/2026): il secret
-    DUFFEL_WEBHOOK_SECRET configurato è confermato corretto (verificato con una sonda HMAC
-    lato server durante il fix della verifica firma — vedi sezione dedicata sotto), ma è
-    marcato "Sensitive" su Vercel e Duffel non lo mostra mai più dopo la creazione del
-    webhook (conferma dalla loro documentazione). Se l'ambiente Vercel si perdesse, l'unica
-    strada sarebbe cancellare e ricreare il webhook Duffel per ottenere un nuovo secret.
-    Da fare con calma, in un momento tranquillo (non urgente): ricreare comunque il webhook
-    apposta per avere un secret salvato anche in un password manager, non solo su Vercel —
-    pura igiene, non risponde a un problema attuale
-0. **Stripe Radar — decidere entro gennaio 2027**: email Stripe 30/07/2026 — ristrutturazione
-   in 4 livelli (Lite/Standard/Plus/Pro). Prova gratuita "Radar Standard" fino al 22/01/2027,
-   poi addebito automatico €0,05/transazione esaminata se non si interviene. Alternativa
-   gratuita per sempre: passare a "Radar Lite" (un click in Dashboard) prima della scadenza,
-   protezione più basilare (solo carte, no analisi frodi avanzata). Nessuna azione richiesta
-   ora — rivalutare quando la scadenza si avvicina (es. dicembre 2026)
-1. ~~URGENTE — Migrazione Neon Azure→AWS~~ — **COMPLETATA 4GO-24** (staging + produzione,
-   vedi sezione dedicata sotto). Password Neon vecchie/nuove esposte in chat, Emi ha scelto
-   di non ruotarle.
-2. ~~SIAE raccomandata A/R inviata — attendere conferma/attestazione~~ — **CONFERMATO 31/07/2026**.
-   Attestazione ricevuta: registrato il 02/07/2026, numero progressivo D000031428, numero
-   registrazione D000029908. Titolo depositato: "VIOLETTA-ASSISTENTE AI PER TURISMO", autore
-   Emiliano Marchesi. **Questo sblocca**: cherry-pick develop→main (Lakera Guard + flussi
-   Violetta + Playwright), rimozione noindex da /demo-bot e /violetta, submit GSC nuove
-   pagine, listing Product Hunt/AI directories — vedi sezione "Post-SIAE go-live" più sotto.
-   Il cherry-pick massiccio resta comunque da pianificare con attenzione (302 commit solo
-   develop, 622 solo main al 31/07 — numeri cresciuti parecchio da mesi fa) — non da fare
-   a cuor leggero solo perché ora è sbloccato. **Iniziato 31/07/2026 via Claude Code** (repo
-   locale sul PC di Emi), piano concordato in 3 gruppi: 1) Interprete/Ristorante Concierge
-   Vapi (basso rischio, quasi tutto codice nuovo) 2) Pagamenti Violetta commerciale (Stripe
-   checkout abbonamenti + PayPal capture) 3) UI landing Violetta. `telegram/webhook/route.ts`
-   lasciato per ultimo, riga per riga (+791 righe di differenza, il file più condiviso).
-   **ATTENZIONE**: alcuni file su develop hanno CODICE RIMOSSO rispetto a main (pinterest.ts,
-   threads.ts, googleServiceAuth.ts) — develop è indietro su queste integrazioni lavorate
-   di recente su main, va portato solo codice nuovo, mai sovrascritta una versione più vecchia.
-   **ULTIMO STEP dopo il cherry-pick completo** (promemoria esplicito di Emi, 31/07/2026):
-   ~~rimuovere il `noindex` da TUTTE le pagine Violetta-correlate~~ — **FATTO 01/08/2026**:
-   tolto da `/demo-bot` e `/violetta` (quest'ultimo era già un file orfano mai realmente
-   in vigore), entrambe sottomesse a Search Console e confermate indicizzate. Resta da
-   fare: spingere attivamente su SEO, AEO (AI answer engines — Perplexity/Claude/
-   Gemini, vedi lavoro FAQ città del 22/07) e GEO (generative engine optimization) —
-   non limitarsi ad aver tolto il blocco, promuovere attivamente la visibilità ora che è live
-3. **Alla conferma SIAE, esplicitamente autorizzata da Emi**: cherry-pick massiccio
-   develop→main di tutto l'arretrato accumulato (fix pagamenti 24/6 — Stripe year
-   undefined, VioletaSubscription idempotency, PayPal validation, parser importi IT
-   — più `e2e-tests.yml`, con schedule lunedì 07:15 riportato a testare produzione
-   invece di staging, bypass header già corretto, pronto all'uso). Consigliato
-   Claude Code per il volume atteso (settimane di sviluppo Violetta divergente,
-   più conflitti di quelli di oggi) — leggere prima la sezione "Pattern risoluzione
-   conflitti cherry-pick" sotto. Violetta go-live: rimuovi noindex → GSC →
-   Product Hunt / There's An AI For That / Futurepedia / BotList — link diretti di
-   sottomissione (verificati 31/07/2026):
-   - There's An AI For That: theresanaiforthat.com/launch/ (opzione gratuita disponibile,
-     featured a pagamento ~$347)
-   - Futurepedia: futurepedia.io/submit-tool — ATTENZIONE, non più gratis, ~$197-297
-     a seconda del piano (diverso da quanto segnato in precedenza)
-   - Product Hunt: producthunt.com (submission standard, gratuita)
-   - BotList: da verificare al momento della sottomissione, non trovato un link diretto
-     affidabile in questa ricerca
-4. ~~Pre go-live Violetta: Playwright E2E su develop~~ — COMPLETATO 4GO-22/23/24,
-   smoke test admin (35 pagine, login TOTP automatico) attivo, primo run lunedì
-   da confermare
-5. Audit endpoint schedulati: multipreventivi, Fly&Drive, locations, social AI, WA/email AI, cortesia rientro, recensioni post-viaggio
-6. TikTok: attendere review
-7. 40 città service areas GBP
-8. Contatti LCP 11.3s: monitorare field data prima di intervenire
-9. Contatti stampa (TTG Italia, Travel Quotidiano, L'Agenzia di Viaggi, FIAVET/Confcommercio Lombardia): inviati, in attesa di risposte
-10. **BDAV (Banca Dati Agenzie di Viaggio e Tour Operator)** — nuova piattaforma Ministero
-    Turismo presentata in demo il 10/07/2026 (sostituisce Infotrav), collegata a
-    Fiavet-Confcommercio. Assegnerà un codice identificativo nazionale obbligatorio da
-    esporre su sito/social/materiali pubblicitari per le agenzie in regola. 4GO probabilmente
-    già censita (eredita dati Infotrav) ma piattaforma ancora in fase demo, integrazione
-    Comuni/Camere di Commercio non completata. **Azione**: monitorare `bdav.ministeroturismo.gov.it`
-    nelle prossime settimane/mesi, appena il codice è assegnabile aggiungerlo a footer sito +
-    bio social — collegabile anche alla registrazione FIAVET/Confcommercio già in sospeso (punto 9)
-11. **PR Dependabot in sospeso: aggiornamento `sharp` 0.35.0** (branch
-    `dependabot/npm_and_yarn/sharp-0.35.0`) — corregge CVE-2026-33327/33328/35590/35591
-    (libvips), ma è breaking change. `sharp` non è mai chiamato direttamente nel codice,
-    solo da Next.js per `next/image` — impatto limitato al rendering immagini, non a script
-    di elaborazione custom. **Prima di fare merge, testare sull'anteprima Vercel del branch
-    (non su produzione)**:
-    - Homepage: hero image si carica bene
-    - Una pagina pacchetto (`/pacchetti/[slug]`): foto carosello senza distorsioni/tagli
-    - Un articolo blog con foto di copertina: caricamento normale
-    - Confronto qualità visiva di 2-3 immagini specifiche prima/dopo (possibili differenze
-      di compressione/nitidezza di default tra versioni sharp)
-    - Console browser (F12) su 2-3 pagine con molte foto: nessun 404/500 su URL
-      `/_next/image?url=...`
-    - Solo se tutto ok → merge della PR da GitHub (isolato, non serve intervento sessione)
+1. **Ricerca web su testi lunghi** — un cliente che incollava l'intero piano di
+   viaggio (migliaia di caratteri) scatenava una ricerca Brave/Perplexity con
+   l'intero testo come query, restituendo risultati completamente estranei
+   (guide su come aprire file, project management). Aggiunto un tetto di 500
+   caratteri a tutti e tre i trigger di ricerca.
+2. **Riassunto documenti incompleto** — la `semanticMap` (generata una volta sola da
+   Haiku al caricamento, tetto 80.000 caratteri) può omettere dettagli veri. Aggiunto
+   un controllo deterministico sul testo grezzo originale, che segnala una nota
+   tecnica esplicita se una parola del messaggio del cliente compare nel documento
+   originale ma non nel riassunto.
+3. **Audioguida silenziosamente troppo corta** — un catch vuoto faceva ripiegare
+   silenziosamente sulla breve descrizione della lista (120-150 parole) invece
+   dell'audioguida vera (800-900 parole per luoghi iconici) se la generazione
+   falliva. Aggiunto log e un tentativo di ripetizione automatico.
+4. **Destinazione generica confondeva le ricerche** — una prenotazione con
+   "Destinazione: USA" (invece di città specifiche) faceva restituire alle ricerche
+   web contenuto generico/popolare (Route 66) invece che pertinente all'itinerario
+   reale. Ora le ricerche usano anche le tappe specifiche (`itineraryCities`) quando
+   la destinazione sembra generica.
+5. **Nome completo mostrato al riavvio** — `participantName` veniva salvato per
+   intero invece che solo il primo nome; ogni riavvio della chat mostrava "Ciao Mirko
+   Massimo Radice!" invece di "Ciao Mirko!".
+6. **Nome cliente mancante nelle escalation agli operatori** — `session.clientName`
+   non esiste come campo (solo `participantName`) — ogni notifica di escalation
+   mostrava sempre "Cliente" generico, mai il vero nome. Bug presente da sempre,
+   mai notato perché non causava errore di compilazione.
+7. **Allucinazione mance hotel USA** — il modello applicava la percentuale
+   ristoranti/taxi (15-20%) anche agli hotel, che invece usano importi fissi in
+   dollari. Aggiunta indicazione esplicita nel prompt.
+8. **Allucinazione nome torre Las Vegas** — "Stratosphere Tower" rinominata
+   ufficialmente "The STRAT" dal 2019/2020, il modello usava ancora il nome vecchio.
+9. **Ambiguità tappa viaggio ("siamo arrivati in aeroporto")** — frase ambigua
+   interpretata nella direzione sbagliata (destinazione invece di partenza),
+   causando istruzioni completamente fuori contesto (ritiro bagagli quando il
+   cliente era ancora al gate di partenza). Aggiunta regola di verifica esplicita
+   prima di dare istruzioni operative.
+10. **[CRITICO] Foto cancellava la memoria della conversazione testuale** — il
+    gestore foto sovrascriveva `context` con un oggetto incompatibile con l'array
+    di turni che si aspetta la chat testuale. Ogni foto inviata cancellava di fatto
+    tutta la cronologia della conversazione per i messaggi testuali successivi — non
+    solo mancava il contesto della foto, spariva anche tutto quello detto prima.
+    Probabilmente il bug più strutturalmente importante trovato in questi giorni,
+    dato che tocca ogni singola foto mandata da qualunque cliente.
+11. **Google Lens — risultati inaffidabili trattati come certezza** — quando il
+    Knowledge Graph non trova nulla, il ripiego (`firstVisual`, il titolo della
+    pagina web più simile visivamente) può restituire contenuto completamente
+    estraneo (es. il titolo di una discussione forum). Dopo alcune iterazioni con
+    Emi, la versione finale: se il risultato sembra il titolo di una domanda/
+    discussione web, il modello combina un contesto onesto sul proprio punto di
+    forza (monumenti/attrazioni) con un'osservazione visiva genuina (usa la propria
+    visione per descrivere cosa SEMBRA, es. "sembra un voucher"), senza inventare
+    dettagli specifici che non può confermare, chiedendo al cliente di descrivere
+    cosa c'è scritto.
+
+**Lezione operativa**: LangSmith può segnalare il messaggio sbagliato come possibile
+allucinazione — in un caso specifico (Roberta, ambiguità aeroporto) aveva flaggato la
+risposta CORRETTA di recupero, non quella davvero sbagliata che l'aveva preceduta di
+27 secondi. Quando un'allucinazione segnalata sembra poco chiara dal solo messaggio
+flaggato, conviene sempre controllare anche il messaggio immediatamente precedente.
+
+### 🔧 Altre correzioni tecniche dell'8 agosto
+- **`undici` aggiornato a 6.28.0** — risolte 3 vulnerabilità moderate (response
+  desync, cookie injection, CRLF injection) scoperte 2 giorni prima
+- **Redirect 301 mancante** per l'ultimo dei 55 URL 404 segnalati da Search Console
+  (Porto Pino → pagina pacchetto reale)
+- **Log diagnostico `[DOCUMENTI]`** aggiunto al gestore "Documenti viaggio" — non
+  tracciato da LangSmith (non chiama mai il modello AI), ora verificabile nei log
+  Vercel
+
+### 🚀 Materiali di lancio preparati (non ancora tutti pubblicati)
+- **There's An AI For That** — valutato e scartato: pubblico non adatto (70% traffico
+  India, parole chiave orientate a intrattenimento), e Violetta non è un tool
+  self-service che un visitatore può provare senza essere già cliente 4GO
+- **Product Hunt** — modulo compilato (nome, tagline, descrizione, tag, primo
+  commento, shoutout a Vapi/ElevenLabs/Anthropic), immagini preparate (thumbnail
+  240x240 dall'icona del bot, 2 immagini galleria: screenshot demo + logo Violetta
+  su tela pulita). Sezione "Connect with Investors" lasciata in sospeso (decisione
+  strategica, non ancora presa)
+- **Launchstag** — email non richiesta ricevuta, identificata come probabile spam/
+  scraper a basso valore (dominio senza reputazione, tagline copiata parola per
+  parola dal nostro Product Hunt). Consigliato di ignorarla.
+
 
 ## Pattern risoluzione conflitti cherry-pick (per il prossimo massiccio, post-SIAE)
 Emersi durante il recupero di 35 commit in sessione 4GO-23 (1 luglio) — riapplicabili:
@@ -1290,3 +1280,70 @@ chiunque nel bundle JavaScript pubblico servito da 13 pagine admin — non un se
 - Quando un secret protegge più chiamanti esterni di tipo diverso (webhook inbound +
   cron esterni), la rotazione richiede aggiornare *tutti* i lati contemporaneamente —
   non ruotare mai senza prima aver censito con certezza chi chiama dall'esterno.
+
+## Sessione 8 Agosto 2026 (giornata dedicata a revisione conversazioni + stabilità infrastruttura)
+
+Giornata diversa dalle precedenti — non cherry-pick o audit di sicurezza, ma revisione
+sistematica di conversazioni reali con clienti (via LangSmith) più risoluzione di
+un'instabilità infrastrutturale seria emersa nel corso della giornata.
+
+### Instabilità database — la parte più impegnativa della giornata
+4 episodi di errore P1001 ("Can't reach database server") in un solo giorno, con
+impatto reale su clienti (conversazioni Telegram rimaste senza risposta per ore, non
+minuti — un cliente ha aspettato quasi 20 ore per una risposta al cambio euro/dollaro).
+Percorso di diagnosi lungo e onesto sui propri errori: prima ipotesi (blip Neon)
+smentita dalla loro status page, seconda ipotesi (troppe connessioni) corretta ma
+insufficiente da sola, terza ipotesi (risveglio a freddo) confermata solo dopo aver
+aperto un ticket con il supporto Neon, che ha risposto con indicazioni tecniche
+precise — inclusa la conferma che il pattern di inizializzazione del client Prisma nel
+progetto era sbagliato per un ambiente serverless (disattivato apposta in produzione,
+quando andrebbe fatto l'esatto contrario). Fix applicati: riuso sempre del client
+Prisma globale, scale-to-zero disattivato sul progetto Neon. Circa 11 ore pulite alla
+fine della sessione, non ancora conclusivo al 100% ma incoraggiante.
+
+### Revisione conversazioni — 11 bug reali trovati e corretti
+La parte più produttiva della giornata: leggendo conversazioni vere tra Violetta e
+clienti reali (famiglia Radice con Mirko/Mariangela/Micol, Roberta Santangelo, Aniello
+Nannola), sono emersi 11 problemi concreti, dal più piccolo (un'allucinazione sulle
+mance hotel) al più strutturalmente serio (l'invio di una foto che cancellava l'intera
+memoria della conversazione testuale per i messaggi successivi — un bug presente
+probabilmente da molto tempo, mai notato prima). Dettaglio completo nella sezione
+"Prossimi step" più sopra.
+
+Un momento degno di nota: nel caso del voucher hotel fotografato da Roberta, la prima
+correzione proposta (trattare il risultato incerto di Google Lens come "indizio da
+usare con cautela") si è rivelata in un dialogo a più riprese con Emi progressivamente
+migliore — prima la proposta di dichiarare esplicitamente il limite del sistema
+("il mio punto di forza sono i monumenti"), poi la correzione di Emi che il modello
+*vede* davvero l'immagine e non dovrebbe fingere di non vedere nulla, infine la sintesi
+che combina entrambe le cose in un'unica risposta naturale. Buon esempio di come
+un'iterazione a più mani produca un risultato migliore di qualunque versione singola.
+
+### Lavoro minore ma utile
+- `undici` aggiornato, 3 vulnerabilità moderate chiuse
+- Ultimo redirect 404 mancante su 55 (Porto Pino)
+- Log diagnostico per il pulsante "Documenti viaggio", che non essendo una chiamata
+  AI non lascia traccia in LangSmith — utile promemoria che LangSmith copre solo una
+  parte del bot, non tutto
+- Materiali di lancio Product Hunt preparati (immagini, testi, shoutout) — non ancora
+  pubblicato, la decisione sulla sezione investitori resta aperta
+- Valutato e scartato "There's An AI For That" come piattaforma di lancio (pubblico
+  non adatto al caso d'uso specifico di Violetta)
+- Chiarita la domanda sulla fatturazione Claude Code — non era un problema, solo una
+  scelta consapevole di far pagare l'agenzia tramite la chiave di Massimo
+
+### Lezioni operative della giornata
+- **LangSmith può segnalare il messaggio sbagliato** come possibile allucinazione —
+  verificare sempre anche il messaggio immediatamente precedente a quello flaggato,
+  non fermarsi al singolo run segnalato
+- **Non tutte le interazioni del bot passano da LangSmith** — solo quelle che
+  chiamano il modello AI. Pulsanti con logica deterministica (query database diretta)
+  non lasciano traccia lì, serve un log dedicato se serve verificarli
+- **Prima di fidarsi di un'ipotesi tecnica plausibile, verificarla con una fonte
+  primaria** (status page, documentazione ufficiale) prima di comunicarla con
+  sicurezza — successo più volte in questa sessione di dover correggere un'ipotesi
+  presentata con troppa fiducia
+- **Un'istruzione nel prompt non è mai una garanzia meccanica al 100%** — anche
+  regole scritte con attenzione possono non essere seguite in ogni caso, specialmente
+  su ambiguità sottili; il test più affidabile resta osservare il comportamento reale
+  sul traffico vero
