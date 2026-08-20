@@ -1347,3 +1347,28 @@ un'iterazione a più mani produca un risultato migliore di qualunque versione si
   regole scritte con attenzione possono non essere seguite in ogni caso, specialmente
   su ambiguità sottili; il test più affidabile resta osservare il comportamento reale
   sul traffico vero
+
+### Lezioni operative — 20 agosto 2026 (sessione lunghissima, molti bug reali)
+- **Verificare il caso specifico, non solo il meccanismo generale** — controllare che
+  "il sistema in astratto funzioni bene" non basta; serve verificare che il caso
+  concreto (es. un luogo specifico) ci passi davvero attraverso, prima di rassicurare
+  qualcuno su un problema pratico
+- **Prima di dire "impatta solo utenti astratti", ricordarsi che sono persone vere in
+  viaggio in quel momento** — un bug nel flusso di prenotazione non è solo un
+  problema tecnico da sistemare con calma, è qualcuno che sta aspettando una risposta
+  reale
+- **Dare a un classificatore AI più contesto (es. cronologia) per farlo funzionare
+  meglio in un caso può farlo scattare per errore in un caso diverso** — ogni
+  ampliamento di un trigger va sempre accompagnato da un controllo esplicito sullo
+  stato attivo, non solo dal miglioramento dell'intento
+- **Un percorso deterministico che risponde al cliente ma non aggiorna la cronologia
+  dell'AI genera bug di continuità difficili da diagnosticare** — un messaggio
+  concorrente arrivato subito dopo può "ririspondere da zero" a qualcosa già
+  risposto, ore dopo, ignorando completamente il contesto reale
+- **Gli errori Telegram possono fallire in silenzio senza lanciare eccezioni** — un
+  `parse_mode: Markdown` con testo non fidato può restituire `ok:false` senza mai
+  interrompere il codice, lasciando un'intera notifica non consegnata senza nessun
+  segnale visibile
+- **Quando il cliente insiste che qualcosa non torna, fidarsi e investigare, non
+  minimizzare** — più bug critici di oggi sono stati trovati solo perché Emi ha
+  continuato a chiedere "possibile?" invece di accettare la prima spiegazione plausibile

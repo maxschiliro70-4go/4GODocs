@@ -208,3 +208,15 @@
 - Test email conferma prenotazione 1€
 - TOTP reset QR admin
 - Bing Places verificato → sameAs layout.tsx
+
+### 20 agosto 2026 — pattern ricorrenti trovati (sessione lunga)
+
+**Percorsi deterministici invisibili all'AI generale:** più volte oggi trovato lo stesso bug — un flusso deterministico (finder luoghi vicini, audioguida foto) manda la risposta al cliente ma non aggiorna `session.context`, quindi l'AI generale non sa mai che è successo. Prima di costruire un nuovo percorso deterministico, controllare sempre se serve anche l'aggiornamento della cronologia per i turni successivi.
+
+**Trigger AI con cronologia = rischio di over-firing:** dare a un classificatore accesso alla cronologia (per riconoscere conferme tipo "prenota pure") lo rende anche più propenso a scattare quando NON dovrebbe, durante uno step attivo di un altro flusso. Sempre aggiungere una guardia esplicita "c'è già un flusso attivo?" PRIMA di qualunque trigger fresco, non dopo.
+
+**Errori Telegram silenziosi:** `parse_mode: Markdown` con contenuto non fidato (email/messaggi grezzi del cliente) può far fallire l'intero invio senza nessuna eccezione — solo `ok:false` nella risposta, facile da ignorare. Sempre fare l'escape dei caratteri speciali (`_ * \` [`) nel contenuto interpolato, o avere un fallback senza parse_mode.
+
+**Un errore in un ciclo può bloccare tutto il resto:** un'eccezione non gestita su UN elemento di un ciclo `for` interrompe l'intera esecuzione, saltando in silenzio tutti gli elementi successivi. Avvolgere sempre il corpo del ciclo in un try/catch per singolo elemento quando si itera su più notifiche/item indipendenti.
+
+**Regole troppo strette per un solo caso:** diverse regole scritte per un caso specifico (es. minibar hotel, hotel di oggi) sono risultate troppo ristrette quando è arrivato un caso simile ma diverso (dotazioni camera generiche, richieste aperte invece di dirette). Quando si scrive una regola da un caso reale, chiedersi sempre "quali altre varianti dello stesso problema esistono?" prima di considerarla completa.
