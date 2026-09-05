@@ -93,6 +93,24 @@ Puoi aggiungere voci extra dopo la conferma (assicurazione aggiuntiva, escursion
 
 ---
 
+## Proposte generate automaticamente da Adamantis Viaggi (Sud-Est Asiatico)
+
+Da 4GO-26, oltre al caricamento manuale di un PDF RateHawk/TravelComposer, esiste un **secondo modo** in cui nasce una Proposta Viaggio: automatico, per richieste su destinazioni Sud-Est Asiatico (Thailandia, Indonesia, Malesia, Sri Lanka, Vietnam, Cambogia, Laos, India) **non coperte dal catalogo Package interno**.
+
+**Come funziona:** quando un cliente chiede un preventivo per una di queste destinazioni — da form sito, WhatsApp o email diretta — il sistema cerca in automatico un pacchetto compatibile tra quelli di Adamantis Viaggi (tour operator terzo, indicizzato settimanalmente dal cron `adamantis-sync`), legge il PDF trovato e genera una Proposta Viaggio in bozza (stato `DRAFT`, mai inviata al cliente da sola).
+
+**Dove la trovi:** Admin → Richieste, card **"Pacchetto Adamantis"**. Il messaggio della richiesta riporta il codice (`TP-2026-XXXXX`) e il prezzo stimato.
+
+**Cosa manca sempre, per costruzione:**
+- **Il volo internazionale** — Adamantis vende solo componente terra (hotel, trasferimenti, escursioni). Il titolo della proposta e la prima voce "non incluso" lo segnalano esplicitamente ("solo terra, volo da aggiungere").
+- **Il prezzo finale** — quello estratto è la quota Adamantis, da sommare al costo del volo che aggiungi tu (ricerca Duffel manuale per ora, integrazione assistita in arrivo).
+
+**Prima di inviare al cliente:** apri la proposta come faresti con una caricata a mano, aggiungi la tappa/i trasporti per il volo, verifica il prezzo finale, poi procedi come da procedura normale (Gamma, invio, conferma).
+
+**Se il prezzo estratto sembra sballato:** i pacchetti "Tour" (escursioni/itinerari, categoria interna `tour`) non hanno mai un prezzo proprio — sono moduli pensati per essere assemblati, il prezzo esiste solo su "Pacchetti Land" (categoria `pacchetto-land`). Il sistema già lo sa e scarta i "Tour" quando c'è un budget da rispettare, ma se lo vedi comunque a 0 o mancante, è quello il motivo.
+
+---
+
 ## Note operative
 
 | Situazione | Cosa fare |

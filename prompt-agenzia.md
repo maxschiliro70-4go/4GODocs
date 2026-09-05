@@ -1372,3 +1372,42 @@ un'iterazione a più mani produca un risultato migliore di qualunque versione si
 - **Quando il cliente insiste che qualcosa non torna, fidarsi e investigare, non
   minimizzare** — più bug critici di oggi sono stati trovati solo perché Emi ha
   continuato a chiedere "possibile?" invece di accettare la prima spiegazione plausibile
+
+## Sessione 5 settembre 2026 (4GO-26 — fix Violetta social + feature Adamantis Sud-Est Asiatico completa)
+
+### Fix font "VIOLETTA" sui post social — causa radice trovata
+
+Il testo del titolo usciva come quadratini (tofu) su Vercel nonostante il font DM Sans fosse embedded in base64 in `violettaFonts.ts`. Causa: **librsvg (motore SVG di Sharp) non supporta `@font-face`**, risolve i font solo via fontconfig sui font di sistema — e su Vercel serverless non ce n'è nessuno. Il test locale sembrava funzionare per il motivo sbagliato (un font di fallback del sistema mascherava il problema).
+
+**Fix:** testo convertito in path vettoriali con `opentype.js` a partire dallo stesso WOFL embedded, invece di `<text>`. Zero dipendenza da fontconfig, risultato identico ovunque. Per testare davvero in locale un caso simile in futuro: `FONTCONFIG_FILE=/dev/null node script.js`, altrimenti il fallback di sistema nasconde il bug.
+
+### Cron `violetta-social-post` — potenziato
+
+- Secondo post settimanale (venerdì 18:00 UTC, oltre al lunedì 9:00 UTC esistente)
+- Rotazione angolo passata da settimana-ISO a **contatore dei post già pubblicati** — con 2 post/settimana la rotazione per settimana avrebbe ripetuto lo stesso angolo due volte di fila
+- Angolo "funzionalità" non più generico: pesca a rotazione da un array cablato con le 10 feature reali del prodotto (itinerario, ristoranti vicini, audioguide, meteo, volo real-time, cambio, frasi, cosa vedere, sicurezza, prenota per te)
+- Anti-duplicato ridotto da 6 a 3 giorni (con 6 il secondo post settimanale veniva sempre scartato come falso doppione)
+- Anti-ripetizione destinazioni: gli ultimi 8 post passati al prompt perché Claude vari scenario/geografia invece di ricadere sempre su Tokyo/Giappone (osservato: bias reale verso l'esempio "più ovvio" di barriera linguistica)
+- Dicitura trasparenza AI Act aggiunta (stessa `AI_DISCLOSURE` del cron `social-post` esistente), con troncamento sicuro per il limite 500 caratteri di Threads/Pinterest che preserva sempre la dicitura
+
+### Feature Adamantis Viaggi — preventivi automatici Sud-Est Asiatico (4GO-26)
+
+Obiettivo: per richieste su destinazioni Sud-Est Asiatico non coperte dal catalogo interno, matchare automaticamente un pacchetto di Adamantis Viaggi (tour operator terzo, specializzato Estremo Oriente) e generare un draft di preventivo che lascia solo volo e prezzo finale da completare a un operatore. Mai invio automatico al cliente di dati Adamantis.
+
+**Pezzo 1 — indice cache (`AdamantisPackage` + cron `adamantis-sync`, lunedì 4:00 UTC)**
+Estrazione strutturata via Claude Haiku dall'HTML grezzo di `/tour/` e `/offerte/` (non regex — non testabile da questo ambiente contro l'HTML reale del sito). Verificato con dati reali: 79/79 Tour, 26/26 Pacchetto Land, zero troncamenti dopo aver alzato `max_tokens` da 8000 a 16000 (la pagina Tour con ~79 item troncava l'array JSON a metà).
+
+**Pezzo 2 — matching + draft (`src/lib/adamantisMatch.ts`)**
+- Prompt di estrazione dedicato al vero contenuto Adamantis (day-by-day + quota unica), non riusa quello Alpitour di `parseTravelDocument` (pensato per confronti multi-hotel con rating/pro/contro che nei PDF Adamantis non esistono)
+- **Un solo `leg` per pacchetto, mai frazionato per città** anche sui tour multi-tappa: `/api/proposta-scegli` somma il `totalPrice` di ogni leg per il totale, frazionare avrebbe moltiplicato il prezzo mostrato al cliente
+- **Budget è un tetto ("fino a X"), non un bersaglio**: tra i candidati entro budget sceglie il più caro (miglior pacchetto permesso), non semplicemente il più vicino numericamente in entrambe le direzioni — altrimenti un pacchetto sopra budget ma vicino numericamente batteva uno ampiamente entro budget
+- **I PDF "Tour" non hanno prezzo proprio** (sono moduli itinerario pensati per essere assemblati in pacchetti/viaggi con volo) — solo "Pacchetto Land" ce l'ha. Quando c'è budget da rispettare, i candidati si restringono a `categoria: pacchetto-land`, altrimenti su una destinazione Tour-heavy (es. Thailandia, 15 Tour contro 6 Pacchetto Land) i 6 candidati scelti per vicinanza-durata rischiavano di essere tutti senza prezzo
+- Titolo e prima voce "cons" del draft segnalano sempre esplicitamente "solo terra, volo da aggiungere" — per evitare equivoci quando il draft lo apre un operatore diverso da chi ha configurato la feature
+
+**Pezzo 3 — aggancio ai tre canali**
+- **Form preventivi** (`api/preventivo/route.ts`): matching in parallelo alla generazione del testo AI (zero tempo aggiunto), solo se la destinazione non è nel catalogo interno. Email al cliente sempre identica; se il match riesce, `Inquiry` e notifica Telegram riportano codice draft e prezzo
+- **WhatsApp** (`whatsapp/ai/route.ts` + `whatsapp/webhook/route.ts`): edit chirurgico al prompt live — una riga aggiunta alla regola di escalation per qualifica commerciale già esistente, che emette anche `RICHIESTA_VIAGGIO: destinazione=X; budget=Y; durata=Z` sulla riga sotto (stesso principio del marcatore `INFO_MANCANTE` già in uso). Parsing nello stesso blocco dove `ESCALATE` viene già letto
+- **Email diretta** (`api/email-ai/poll/route.ts`): qui la classificazione `ESCALATED` è già decisa a livello di codice da `ESCALATION_TRIGGERS` (parole chiave), indipendente da cosa scrive l'AI — quindi il marcatore serve solo a fornire i VALORI, il gate resta `newCategory === 'ESCALATED'` già esistente. Scope limitato al solo blocco prompt italiano (il prompt supporta 5 lingue in blocchi separati: editarli tutti sarebbe stato un rischio molto più alto per un beneficio marginale)
+- In tutti e tre i canali: slot "Telegram Bot" nell'admin Richieste (mai scritto da nessuno, verificato via grep prima di riusarlo) rinominato in chiave e etichetta a "Pacchetto Adamantis"
+
+**Lezione trasversale della sessione:** il tool di lettura web di Claude in questo ambiente trasforma sempre l'HTML in markdown e non riesce a rifetchare un URL apparso solo dentro il body di una pagina già letta (serve che sia stato un risultato diretto di search/fetch) — impossibile scrivere/testare regex contro il markup reale del sito da qui. Dove serve estrazione strutturata da HTML/PDF esterno, preferire un'estrazione via Claude (con pulizia preventiva di script/style/base64 per non gonfiare i token) invece di una regex che non si può verificare end-to-end.
