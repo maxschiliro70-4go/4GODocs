@@ -101,6 +101,8 @@ Da 4GO-26, oltre al caricamento manuale di un PDF RateHawk/TravelComposer, esist
 
 **Dove la trovi:** Admin → Richieste, card **"Pacchetto Adamantis"**. Il messaggio della richiesta riporta il codice (`TP-2026-XXXXX`) e il prezzo stimato.
 
+⚠️ **Il nome del fornitore terzo (Adamantis) è visibile SOLO qui, in admin.** Titolo, tappe e hotel della Proposta Viaggio generata non lo nominano mai — sanificato automaticamente per costruzione, perché il titolo finisce anche in email reali al cliente (conferma scelta) e nella pagina pubblica. Non serve nessuna attenzione manuale su questo, ma se per qualsiasi motivo lo vedessi comparire nel titolo o negli hotel di una proposta, segnalalo subito: sarebbe un bug, non un comportamento normale.
+
 **Cosa manca sempre, per costruzione:**
 - **Il volo internazionale** — Adamantis vende solo componente terra (hotel, trasferimenti, escursioni). Il titolo della proposta e la prima voce "non incluso" lo segnalano esplicitamente ("solo terra, volo da aggiungere").
 - **Il prezzo finale** — quello estratto è la quota Adamantis, da sommare al costo del volo che aggiungi tu (ricerca Duffel manuale per ora, integrazione assistita in arrivo).
