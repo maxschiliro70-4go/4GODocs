@@ -51,3 +51,17 @@ Ogni singolo commit verificato con `tsc --noEmit` confrontato contro il baseline
 ## Lezione trasversale della sessione
 
 Il tool di lettura web disponibile in questo ambiente trasforma sempre l'HTML in markdown e non riesce a rifetchare un URL apparso solo dentro il body di una pagina già letta (serve che sia stato un risultato diretto di search/fetch, non un link trovato dentro il contenuto). Impossibile scrivere e testare una regex contro il markup reale di un sito esterno da qui. Dove serve estrazione strutturata da HTML/PDF esterni, preferire un'estrazione via Claude (con pulizia preventiva di script/style/immagini base64 per non gonfiare inutilmente i token) invece di una regex scritta alla cieca e mai verificata end-to-end.
+
+## Fix critico post-chiusura: nessun riferimento al fornitore terzo deve arrivare al cliente
+
+Trovato dopo la prima chiusura della feature, prima che causasse danni: `TravelProposal.title` finisce in email REALI al cliente (`proposta-scegli.ts`: "Preferenza ricevuta: ${proposal.title}", sia subject che body) e nell'URL della pagina di ringraziamento pubblica — non solo in admin. Il title costruito inizialmente ("... · Adamantis Viaggi") avrebbe rivelato il fornitore terzo al cliente al momento della scelta/conferma, anche dopo revisione operatore.
+
+**Fix su due livelli:** rimosso il nome del fornitore dal title costruito (resta solo linguaggio operativo neutro), e aggiunta `sanitizzaTestoCliente()` come difesa strutturale — applicata a hotelName/roomType/mealPlan/pros/cons/titolo prima che finiscano nel draft, per il caso in cui il PDF stesso nomini l'azienda in un punto non ancora verificato manualmente su tutti i ~105 pacchetti (footer, condizioni, intestazioni). Le notifiche interne agli operatori (Telegram, Inquiry, Escalation) continuano a nominare esplicitamente il fornitore — usano il valore non sanificato nel return value della funzione, separato dai campi che finiscono nel record visibile al cliente.
+
+## Chiusura ricerca voli Duffel (assistita, non automatica)
+
+Ultimo pezzo rimasto aperto, chiuso in coda alla sessione:
+
+- **Mappa IATA centralizzata** in `src/lib/duffelFlights.ts` — prima erano due liste leggermente diverse in `telegram/webhook.ts` e `whatsapp/ai/route.ts` (già causa di un bug reale in passato: Sharm el-Sheikh mancava da entrambe in momenti diversi). Aggiunte le destinazioni Sud-Est Asiatico mancanti: Malesia (KUL), Sri Lanka (CMB), Vietnam (HAN/SGN), Cambogia (PNH/REP), Laos (VTE), India (DEL/BOM)
+- **Ricerca vera andata+ritorno** in un'unica richiesta Duffel a 2 slice — le funzioni esistenti fanno solo sola andata, pensate per stime in chat, non per popolare `transports` di una proposta
+- **Tasto "Cerca voli (Duffel)"** nella pagina Proposte Viaggio: nuova azione `duffel-search` (solo ricerca, non salva), l'operatore vede il riepilogo e conferma, poi si salva con l'azione `update-proposal` già esistente — nessuna azione nuova per il salvataggio. Resta sempre intervento umano, la ricerca propone soltanto.
