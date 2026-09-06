@@ -73,6 +73,36 @@ da normale variabilità statistica su numeri piccoli.
   è una dinamica indipendente (stagionale? organica?). Utile per non attribuire erroneamente
   la causa quando si guarderà l'effetto della riduzione più avanti
 
+### 2026-09-03
+- **⚠️ GAP nel log: nessuna voce tra il 2026-07-04 e oggi (2 mesi).** Il criterio dei "5-7
+  giorni consecutivi" non è applicabile a questo report da solo — non ho i report dei
+  giorni precedenti per sapere se questo è il giorno 1 o il giorno 5 di un eventuale calo.
+- Ieri vs giorno prima: Clic 21 (-1) · Impressioni 1440 (-473) · Pos. media 8.1 · CTR 1.5%
+- 7gg vs 7gg prec.: Clic 134 (-61) · Impressioni 8614 (-6256)
+- Top query: "agenzia viaggi senago" (3 clic, pos.13) · "fuerteventura pericolosa" (1, pos.9) · "kathmandu" (1, pos.3) · "malaria sri lanka" (1, pos.11) · "tahiti pericolosa" (1, pos.6)
+- Opportunità: "agenzia viaggi cologno monzese" (8 imp, pos.12) · "agenzia viaggi paderno dugnano" (8 imp, pos.12) · "agenzia viaggi seregno" (12 imp, pos.15)
+- GBP 7gg vs prec.: Impr.search 38 (-52) · Clic sito 1 (-12) · Indicazioni 0 (-6) · Chiamate 0 (-8) — recupero fallito per BUSINESSDIRECTIONREQUESTS/CALLCLICKS (nessun dato da Google, non necessariamente zero vero)
+- **Nota di scala importante**: rispetto ai numeri loggati a luglio (28-36 clic/settimana,
+  ~1700-2050 impressioni), il traffico è cresciuto di circa 4 volte — i confronti assoluti
+  tra il periodo di luglio e oggi NON sono comparabili sulla stessa scala, solo le
+  percentuali di variazione lo sono
+- In percentuale: -31% clic, -42% impressioni sui 7gg — più marcato di quanto osservato a
+  luglio al 4° giorno consecutivo di calo (-17%/-21%, quel giorno descritto come "ci
+  avviciniamo alla soglia da prendere sul serio"). Ma senza sapere da quanti giorni questo
+  calo è in corso, non posso dire se sia un giorno isolato o un pattern consolidato
+- Nessuna causa tecnica trovata nel codice: verificato git log 27/08→04/09, zero commit
+  toccano sitemap/robots/middleware/canonical/metadata/header. Sito ancora regolarmente
+  indicizzato (verificato via ricerca). Top query informazionali long-tail (blog), che
+  oscillano naturalmente più delle query commerciali — periodo (fine agosto→inizio
+  settembre) coerente con calo stagionale atteso per un'agenzia viaggi, ma non verificabile
+  con certezza da qui senza un confronto anno su anno diretto in GSC
+- **Soluzione strutturale per evitare che questo gap si ripeta**: creato endpoint
+  diagnostico `/api/admin/gsc-trend` (4GO-26) che interroga GSC per il trend REALE degli
+  ultimi 90 giorni (spezzato in settimane) + tentativo di confronto stesso periodo anno
+  scorso — prende i dati direttamente da Google, non dipende da Emi che incolla il report
+  ogni giorno. Da usare al posto di (o insieme a) continuare a incollare qui i report
+  quotidiani, che nella pratica si è dimostrato un processo che si interrompe
+
 <!-- Aggiungere qui i prossimi giorni, stesso formato -->
 
 ---

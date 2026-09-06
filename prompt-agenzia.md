@@ -1013,9 +1013,20 @@ lo strumento giusto per questo caso e non va toccato.
 
 ## Tracking GSC giornaliero
 Emi incolla ogni giorno il report automatico Search Console — storico e criteri di
-lettura in `docs/gsc-tracking.md` (file separato, aggiornato quotidianamente).
-Consultarlo prima di commentare un nuovo report, per confrontare con i giorni precedenti
-invece di giudicare un singolo giorno isolato.
+lettura in `docs/gsc-tracking.md` (file separato). Consultarlo SEMPRE prima di
+commentare un nuovo report, per confrontare con i giorni precedenti invece di
+giudicare un singolo giorno isolato — errore reale commesso il 05/09/2026 (4GO-26):
+commentato un calo -61 clic/-6256 impressioni senza consultare questo file, che
+avrebbe subito mostrato un gap di 2 mesi (ultima voce 04/07/2026) e reso impossibile
+applicare la regola dei 5-7 giorni consecutivi.
+
+**Il log manuale (Emi incolla, Claude registra) si è dimostrato inaffidabile — si
+interrompe nella pratica.** Da 4GO-26 esiste `/api/admin/gsc-trend?secret=4go2026`:
+interroga GSC direttamente per il trend reale degli ultimi 90 giorni (spezzato in
+settimane) + confronto stesso periodo anno scorso, senza dipendere da nessuno che
+incolli qualcosa ogni giorno. Da usare come fonte primaria per capire se un calo è
+un pattern consolidato o rumore di un giorno, il log manuale resta utile solo per
+annotazioni qualitative (es. "cambiato X il giorno Y, tenere a mente per l'effetto").
 
 ---
 
