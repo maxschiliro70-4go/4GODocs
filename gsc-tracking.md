@@ -138,6 +138,11 @@ evitare falsi allarmi futuri identici a questo.
 Confronto anno su anno (stesso periodo 2025): non disponibile, Google non ha più questi
 dati (fuori dal limite di conservazione ~16 mesi o proprietà non ancora verificata allora).
 
+**Fix applicato al cron `gsc-report`**: buffer lag portato da 3 a 6 giorni (il codice
+stesso documentava "fino a 7-10 giorni di ritardo" ma usava un buffer di 3 — causa diretta
+del falso allarme). Aggiunto avviso nel messaggio Telegram quando il calo sui 7gg supera
+una soglia, che rimanda a `/api/admin/gsc-trend` per verifica prima di allarmarsi.
+
 <!-- Aggiungere qui i prossimi giorni, stesso formato -->
 
 ---
