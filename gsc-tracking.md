@@ -103,6 +103,41 @@ da normale variabilità statistica su numeri piccoli.
   ogni giorno. Da usare al posto di (o insieme a) continuare a incollare qui i report
   quotidiani, che nella pratica si è dimostrato un processo che si interrompe
 
+**AGGIORNAMENTO stesso giorno — risolto con dati reali**: interrogato `/api/admin/gsc-trend`,
+trend settimanale reale degli ultimi 90 giorni:
+
+| Settimana | Clic | Impressioni |
+|---|---|---|
+| 05-11 giu | 38 | 2169 |
+| 12-18 giu | 26 | 2095 |
+| 19-25 giu | 38 | 2180 |
+| 26 giu-2 lug | 43 | 2604 |
+| 3-9 lug | 49 | 2884 |
+| 10-16 lug | 80 | 4633 |
+| 17-23 lug | 113 | 5437 |
+| 24-30 lug | 156 | 8717 |
+| 31 lug-6 ago | 138 | 10413 |
+| 7-13 ago | 139 | 9160 |
+| 14-20 ago | 135 | 10383 |
+| 21-27 ago | 167 | 13027 |
+| **28 ago-3 set** | **174** | **11817** |
+
+**Conclusione: NESSUN calo reale.** L'ultima settimana (quella "del presunto calo") ha il
+massimo storico di clic dell'intero periodo di 90 giorni, in crescita rispetto alla
+settimana precedente. Crescita pressoché ininterrotta da giugno (26-43/settimana) a oggi
+(167-174/settimana), +400% circa in 3 mesi. Il report giornaliero che segnalava -61
+clic/-6256 impressioni era un **falso allarme causato dalla finestra di confronto**: molto
+probabilmente confronta gli ultimi 2-3 giorni (dati GSC non ancora completamente elaborati
+da Google) contro una settimana precedente già stabilizzata — stesso fenomeno già
+diagnosticato e risolto per GBP in sessione precedente (dove viene onestamente segnalato
+come "nessun dato"), ma qui il cron `gsc-report` tratta il dato parziale come definitivo
+invece di segnalarlo come tale. **Da valutare: applicare lo stesso principio di onestà sui
+dati parziali già usato per GBP anche al confronto giornaliero/settimanale GSC**, per
+evitare falsi allarmi futuri identici a questo.
+
+Confronto anno su anno (stesso periodo 2025): non disponibile, Google non ha più questi
+dati (fuori dal limite di conservazione ~16 mesi o proprietà non ancora verificata allora).
+
 <!-- Aggiungere qui i prossimi giorni, stesso formato -->
 
 ---
