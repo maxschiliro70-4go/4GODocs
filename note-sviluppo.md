@@ -232,3 +232,11 @@
 **Impossibile testare una regex contro HTML che non si può fetchare grezzo:** il tool di lettura web disponibile in sandbox trasforma sempre in markdown e non rifetcha URL visti solo dentro il body di una pagina già letta (serve un hit diretto di search/fetch). Per estrazione strutturata da HTML/PDF esterni non verificabili end-to-end da qui, preferire un'estrazione via Claude invece di una regex scritta alla cieca — con pulizia preventiva di script/style/immagini base64 per non gonfiare inutilmente i token.
 
 **`max_tokens` va dimensionato sul caso peggiore reale, non su quello medio:** un'estrazione strutturata testata bene su una pagina con pochi elementi può troncare silenziosamente su una pagina con molti più elementi (qui: 8000 bastava per 26 pacchetti, troncava a metà su 79) — l'errore risultante ("nessun JSON valido") non dice da solo che è un problema di lunghezza; loggare sempre `stop_reason` per distinguere un troncamento da un errore di formato vero.
+
+### 6 settembre 2026 — emoji personalizzate Telegram inline richiedono Premium sull'account proprietario del bot
+
+Le emoji custom (`entity type: custom_emoji`) inviate via Bot API vengono accettate da Telegram (`sendMessage` risponde `ok`, `message_id` assegnato) ma l'array `entities` torna sempre vuoto nella risposta — scartate silenziosamente, nessun errore esplicito. Isolato con un endpoint diagnostico dedicato che manda un singolo messaggio e mostra body+risposta completi: la struttura della richiesta (offset/length UTF-16, custom_emoji_id) era corretta al 100%, escludendo un problema di formato.
+
+Causa reale: **serve Telegram Premium sull'account che ha creato il bot con BotFather** (non sul mittente cliente, non sul destinatario) — se quell'account non ha Premium, Telegram accetta il messaggio ma toglie silenziosamente la formattazione "premium". L'account proprietario di @FourGoTravelBot non ha Premium, quindi le emoji restano sempre standard (🌍/🧭/🧳 invece della versione brandizzata 4GO) — comportamento accettato per ora, nessuna azione.
+
+Nota per il futuro: se si riprova, gli sticker separati (`sendSticker` con `file_id`, set `fourgo_stickers_by_FourGoTravelBot`) non hanno questa restrizione — funzionano senza Premium, sono un oggetto Telegram diverso. Infrastruttura già pronta in `src/lib/stickerSet4go.ts` se si vuole tornare a quell'approccio.
