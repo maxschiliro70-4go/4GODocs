@@ -246,3 +246,12 @@ Le emoji custom (`entity type: custom_emoji`) inviate via Bot API vengono accett
 Causa reale: **serve Telegram Premium sull'account che ha creato il bot con BotFather** (non sul mittente cliente, non sul destinatario) — se quell'account non ha Premium, Telegram accetta il messaggio ma toglie silenziosamente la formattazione "premium". L'account proprietario di @FourGoTravelBot non ha Premium, quindi le emoji restano sempre standard (🌍/🧭/🧳 invece della versione brandizzata 4GO) — comportamento accettato per ora, nessuna azione.
 
 Nota per il futuro: se si riprova, gli sticker separati (`sendSticker` con `file_id`, set `fourgo_stickers_by_FourGoTravelBot`) non hanno questa restrizione — funzionano senza Premium, sono un oggetto Telegram diverso. Infrastruttura già pronta in `src/lib/stickerSet4go.ts` se si vuole tornare a quell'approccio.
+
+### 7 settembre 2026 — AI Visibility: nessuno storico prima d'ora, costruito e analizzato
+
+Il tracking esiste dal 20/07/2026 ma nessun confronto storico era mai stato guardato prima di stasera (solo lo scatto della settimana corrente via Telegram). Costruiti due endpoint diagnostici (`ai-visibility-trend`, `ai-visibility-split`) per colmare il buco.
+
+Scomponendo tra le 8 domande originali e le 3 su Violetta-come-prodotto (aggiunte l'11/08/2026):
+- **Violetta: 0% da sempre**, atteso — un prodotto che gli LLM non conoscono ancora dal training non compare, non è un problema da bug-fix
+- **Le 8 originali sono calate davvero**: media ~15% (20/07-10/08) → ~7,5% (17/08-07/09), dimezzata e stabile nella fascia bassa da 3 settimane, non un singolo scatto
+- Nessuna causa tecnica interna trovata (verificato git log 13-18/08 per schema/robots/sitemap/metadata, nulla di rilevante) — probabile comportamento lato Perplexity/Claude stessi (quali fonti scelgono di citare), non un bug 4GO. Campione piccolo (16 controlli/settimana), quindi resta un segnale da confermare nel tempo con l'endpoint trend, non un'emergenza.
