@@ -233,6 +233,12 @@
 
 **`max_tokens` va dimensionato sul caso peggiore reale, non su quello medio:** un'estrazione strutturata testata bene su una pagina con pochi elementi può troncare silenziosamente su una pagina con molti più elementi (qui: 8000 bastava per 26 pacchetti, troncava a metà su 79) — l'errore risultante ("nessun JSON valido") non dice da solo che è un problema di lunghezza; loggare sempre `stop_reason` per distinguere un troncamento da un errore di formato vero.
 
+### 7 settembre 2026 — una lista duplicata in più file si disallinea prima o poi
+
+Bug reale: la lista delle 19 query SERP monitorate esisteva solo dentro `admin/scraper/route.ts`. Un find-replace automatico di maggio ("agenzia viaggi" → "agenzia viaggi e tour operator" su 100 occorrenze) ha rinominato 6 query locali + 1 generica, lasciando le vecchie stringhe come righe "zombie" nel database — il report settimanale le contava ancora (raggruppamento per query distinta vista in tabella, non filtrato sulla lista attuale), gonfiando "assenti" da un reale ~14 a un allarmante 22. Lo stesso find-replace ha anche introdotto un bug testuale silenzioso: una query che già conteneva "tour operator" è diventata "tour operator tour operator" duplicato, monitorato su Google per 4 mesi senza che nessuno se ne accorgesse.
+
+Fix strutturale, non solo puntuale: centralizzata la lista in `src/lib/serpQueries.ts`, unica fonte di verità importata sia dallo scraper sia dal report (che ora filtra `WHERE query = ANY(...)` sulla lista attuale). La lezione generale: quando la stessa lista/costante serve in più file, la prima duplicazione è quasi gratis ma la seconda modifica futura (rinomina, aggiunta, rimozione) quasi certamente dimenticherà di aggiornare tutte le copie — vale la pena centralizzare alla prima vera necessità di riuso, non aspettare che diverga silenziosamente.
+
 ### 6 settembre 2026 — emoji personalizzate Telegram inline richiedono Premium sull'account proprietario del bot
 
 Le emoji custom (`entity type: custom_emoji`) inviate via Bot API vengono accettate da Telegram (`sendMessage` risponde `ok`, `message_id` assegnato) ma l'array `entities` torna sempre vuoto nella risposta — scartate silenziosamente, nessun errore esplicito. Isolato con un endpoint diagnostico dedicato che manda un singolo messaggio e mostra body+risposta completi: la struttura della richiesta (offset/length UTF-16, custom_emoji_id) era corretta al 100%, escludendo un problema di formato.
