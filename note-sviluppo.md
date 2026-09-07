@@ -255,3 +255,13 @@ Scomponendo tra le 8 domande originali e le 3 su Violetta-come-prodotto (aggiunt
 - **Violetta: 0% da sempre**, atteso — un prodotto che gli LLM non conoscono ancora dal training non compare, non è un problema da bug-fix
 - **Le 8 originali sono calate davvero**: media ~15% (20/07-10/08) → ~7,5% (17/08-07/09), dimezzata e stabile nella fascia bassa da 3 settimane, non un singolo scatto
 - Nessuna causa tecnica interna trovata (verificato git log 13-18/08 per schema/robots/sitemap/metadata, nulla di rilevante) — probabile comportamento lato Perplexity/Claude stessi (quali fonti scelgono di citare), non un bug 4GO. Campione piccolo (16 controlli/settimana), quindi resta un segnale da confermare nel tempo con l'endpoint trend, non un'emergenza.
+
+### 7 settembre 2026 — Facebook engagement sempre a zero: causa finale, permesso mancante non bug di codice
+
+Percorso di debug lungo ma concluso con certezza (grazie ai test diretti di Emi nel Graph API Explorer):
+
+1. **Causa 1 (risolta)**: l'ID salvato alla pubblicazione video (`/{pageId}/videos`) è quello dell'oggetto FOTO satellite di copertina generato da Facebook, non il post/storia reale — confermato dai campi disponibili nell'Explorer (album/images/webp_images = campi di una Foto). Fix: risolvere sempre `page_story_id` (campo disponibile anche sull'oggetto foto) e usare quell'ID composito (`PAGE_ID_POST_ID`) per tutte le chiamate engagement.
+
+2. **Causa 2 (bloccante, non risolvibile via codice)**: anche con l'ID giusto, Facebook risponde esplicitamente `(#10) This endpoint requires the 'pages_read_user_content' permission`. Verificato nel pannello App Meta: `pages_read_engagement` è concesso (badge "875, Pronto per la pubblicazione") ma **`pages_read_user_content` no** (elencato senza badge di attivazione) — sono due permessi distinti, il primo non copre la lettura di reazioni/commenti sui contenuti.
+
+**Stato**: codice corretto e completo (fetchFacebookInsights in cron/social-insights/route.ts), verificato con diagnostica `_debug` diretta nella risposta Graph API grezza. Serve che Emi richieda/abiliti `pages_read_user_content` per l'app tramite App Review Meta (business verification, use case) prima che i numeri possano popolarsi. Il campo `_debug` nei metrics resta intenzionalmente finché il permesso non viene concesso, come segnale visibile del motivo esatto invece di uno zero silenzioso.
