@@ -186,3 +186,13 @@ concreto per le funzionalità prodotto, non solo traffico homepage generico.
   sorpresa per un'agenzia viaggi locale, ma utile tenerlo a mente per eventuali scelte UX.
 
 <!-- Aggiungere qui i prossimi snapshot mensili, stesso formato -->
+
+### 7 settembre 2026 — falso allarme ricorrente (3 volte), causa profonda trovata e risolta
+
+Lo stesso falso allarme di calo si è ripresentato identico altre 2 volte (06/09, 07/09) dopo il fix di buffer della notte precedente — confermato ogni volta con `/api/admin/gsc-trend` che l'ultima settimana reale era sempre in linea con le precedenti (168-174 clic, mai un calo vero).
+
+Trovate 2 cause reali, non una sola:
+1. **Buffer ancora insufficiente**: 6 giorni non bastava nella pratica. Portato a **10**, il limite massimo che il codice stesso documentava ("fino a 7-10 giorni di lag").
+2. **Bug strutturale più profondo**: le variabili `twoDaysAgo`/`sevenDaysAgo`/`fourteenDaysAgo` erano tutte calcolate come offset FISSI da "oggi" (oggi-4/oggi-7/oggi-14), scollegate dal valore lag-adjusted di "yesterday". Risultato pratico: la finestra "ultimi 7 giorni" non era mai realmente larga 7 giorni (con buffer=6 era larga 1 solo giorno; con buffer=10 sarebbe stata addirittura invertita, data di inizio dopo quella di fine). Stesso problema sul confronto "ieri vs giorno prima": si stava paragonando ieri con un giorno successivo, non precedente.
+
+**Fix definitivo**: tutte e 3 le variabili ora derivate direttamente da `yesterday` (yesterday-1, yesterday-6, yesterday-13) invece di offset fissi da oggi — restano sempre coerenti qualunque valore abbia il buffer, non serve più ricalcolare a mano ogni relazione se il buffer cambia ancora in futuro. Questa volta il fix è strutturale, non solo un numero più grande.
